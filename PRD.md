@@ -1,18 +1,18 @@
-# PRD: Playnite Library JSON Exporter
+# PRD: Playnite Library Exporter
 
 ## 1. Product Summary
 
-**Product name:** Playnite Library JSON Exporter
+**Product name:** Playnite Library Exporter
 **Product type:** Playnite C# Generic Plugin
-**Primary purpose:** Automatically export the user’s current Playnite game library to a local JSON file whenever the Playnite library is updated, with an additional manual export command available from the Playnite UI.
+**Primary purpose:** Automatically export the user’s current Playnite game library to a local file whenever the Playnite library is updated, with configurable export formats and an additional manual export command available from the Playnite UI.
 
-The plugin should use the official Playnite SDK/database API rather than directly parsing Playnite’s internal library files. The exported JSON should provide a stable, machine-readable list of all games in the Playnite library, including each game’s name and Steam AppID when the Steam AppID can be confidently inferred from Playnite’s existing metadata.
+The plugin should use the official Playnite SDK/database API rather than directly parsing Playnite’s internal library files. The export should provide a stable list of games in the Playnite library, including each game’s name and Steam AppID when the Steam AppID can be confidently inferred from Playnite’s existing metadata. JSON should remain the default machine-readable format, with additional user-selectable outputs for plain text, Markdown, and CSV.
 
 ------
 
 ## 2. Background and Problem Statement
 
-The user maintains a Playnite library containing games from Steam and other libraries. They want a reliable JSON file that can be consumed by other scripts or applications, without manually exporting the library each time it changes.
+The user maintains a Playnite library containing games from Steam and other libraries. They want a reliable export file that can be consumed by other scripts, applications, documents, or spreadsheets, without manually exporting the library each time it changes.
 
 Playnite already maintains the authoritative game library. The safest and most maintainable approach is to create a Playnite plugin that runs inside Playnite, accesses `PlayniteApi.Database.Games`, and writes an export file after Playnite finishes updating the library.
 
@@ -24,21 +24,22 @@ The plugin should avoid direct parsing of Playnite’s internal database/library
 
 ### 3.1 Primary Goals
 
-1. Export all Playnite library games to a JSON file.
+1. Export Playnite library games to a local file.
 2. Automatically refresh the export after Playnite completes a library update.
 3. Provide a manual “Export now” action from the Playnite UI.
 4. Include the game name for every exported game.
 5. Include a Steam AppID when it can be confidently inferred from Playnite metadata.
 6. Use the official Playnite SDK/database API.
 7. Make the output deterministic, stable, and easy for downstream tools to consume.
-8. Provide basic settings for export path, automatic export behavior, and JSON formatting.
-9. Log errors clearly without disrupting normal Playnite usage.
+8. Provide basic settings for export path, automatic export behavior, selected output formats, and format-specific formatting.
+9. Provide a user-selectable option to exclude games with a tag or genre named “visual novel” in Playnite metadata.
+10. Log errors clearly without disrupting normal Playnite usage.
 
 ### 3.2 Secondary Goals
 
 1. Include useful provider/source metadata for each game.
-2. Include export metadata such as schema version, timestamp, total game count, and plugin version.
-3. Support atomic file writes to avoid partial/corrupt JSON.
+2. Include export metadata such as schema version, timestamp, total game count, filtered game count, selected output formats, and plugin version.
+3. Support atomic file writes to avoid partial/corrupt exports.
 4. Keep automatic exports quiet unless there is an error.
 5. Show clear confirmation after manual export.
 6. Minimize performance impact on Playnite startup and library updates.
@@ -68,7 +69,7 @@ These may be considered future enhancements.
 
 The initial target user is an advanced Windows/Playnite user who wants to keep an automatically updated machine-readable game list for personal automation.
 
-Secondary future users may include Playnite users who want JSON exports for dashboards, game recommendation tools, inventory comparisons, launchers, web apps, or local AI workflows.
+Secondary future users may include Playnite users who want structured or human-readable exports for dashboards, game recommendation tools, inventory comparisons, launchers, web apps, local AI workflows, notes, or spreadsheets.
 
 ------
 
@@ -100,10 +101,10 @@ The plugin should run inside Playnite and subscribe to Playnite lifecycle events
 1. Playnite starts.
 2. Playnite updates one or more libraries, either automatically or manually.
 3. Playnite fires the plugin’s library-updated lifecycle event.
-4. The plugin schedules a JSON export.
+4. The plugin schedules an export using the configured output formats.
 5. The plugin reads a snapshot of `PlayniteApi.Database.Games`.
-6. The plugin serializes the library to the configured JSON format.
-7. The plugin writes the file atomically to the configured output path.
+6. The plugin applies configured filters and serializes the library to each configured output format.
+7. The plugin writes each output file atomically to the configured output path.
 8. The plugin logs success or failure.
 
 ### 7.2 Manual Flow
@@ -121,7 +122,7 @@ The plugin may include a setting to export on Playnite startup. Recommended defa
 - If the export file does not exist yet, export once on startup.
 - Otherwise, rely primarily on library update events.
 
-This prevents the user from having no JSON file after first installation, while avoiding unnecessary exports on every launch.
+This prevents the user from having no export file after first installation, while avoiding unnecessary exports on every launch.
 
 ------
 
@@ -133,13 +134,37 @@ The plugin must export all games visible to the Playnite database API.
 
 The default behavior should be to include every game in the Playnite library, including installed, uninstalled, hidden, manually added, emulated, and third-party-library games.
 
-A future setting may allow filtering, but MVP should export the complete library.
+Filtering must be disabled by default unless the user explicitly enables a filter setting.
+
+------
+
+### FR-001A: Optional Visual Novel Tag Exclusion
+
+The plugin must provide a user-facing menu/settings option to exclude games with a tag or genre named “visual novel” in Playnite metadata.
+
+Recommended behavior:
+
+- Default: disabled.
+- Matching should be case-insensitive.
+- Matching should trim leading/trailing whitespace.
+- The initial exact tag match should be `visual novel`.
+- The filter should use Playnite tag and genre metadata, not game title, category, source, or description text.
+- A game with multiple tags or genres should be excluded if any tag or genre matches `visual novel`.
+- Games without matching tags or genres should remain included.
+- The filter should apply consistently to automatic exports, manual exports, and all supported export formats.
+- Export summary metadata should report how many games were excluded by filters when the output format supports metadata.
+
+The setting label should be clear and direct, such as:
+
+```text
+Exclude games with tag/genre "visual novel"
+```
 
 ------
 
 ### FR-002: Automatic Export After Library Update
 
-The plugin must automatically export JSON when Playnite finishes a library update.
+The plugin must automatically export using the configured output formats when Playnite finishes a library update.
 
 The automatic export should be triggered by Playnite’s library-updated lifecycle event.
 
@@ -158,7 +183,7 @@ The plugin must provide a manual export command in Playnite Desktop mode.
 Recommended menu location:
 
 ```text
-Extensions → Playnite Library JSON Exporter → Export library now
+Extensions → Playnite Library Exporter → Export library now
 ```
 
 The menu item should trigger the same export logic used by automatic export.
@@ -167,6 +192,36 @@ After manual export:
 
 - On success, show a short success notification or dialog including the output path.
 - On failure, show an error message with a brief explanation and direct the user to Playnite logs for details.
+
+------
+
+### FR-003A: Export Options Menu Items
+
+The plugin must expose menu options in Playnite Desktop mode for the most common export controls.
+
+Recommended menu structure:
+
+```text
+Extensions → Playnite Library Exporter → Export library now
+Extensions → Playnite Library Exporter → Output formats → JSON
+Extensions → Playnite Library Exporter → Output formats → Plain text (.txt)
+Extensions → Playnite Library Exporter → Output formats → Markdown (.md)
+Extensions → Playnite Library Exporter → Output formats → Spreadsheet (.csv)
+Extensions → Playnite Library Exporter → Exclude games with tag/genre "visual novel"
+```
+
+Menu behavior:
+
+- Output formats should behave like independent toggles, allowing one or more selected formats at the same time.
+- JSON should be selected by default.
+- The current selected output formats should be visibly indicated if Playnite menu APIs support checked states.
+- The plugin must prevent the user from saving or applying a state with zero output formats selected.
+- The visual novel exclusion option should behave like a toggle.
+- Menu selections must persist to plugin settings.
+- Menu selections must apply to both manual and automatic exports.
+- If checked menu states are not supported by the Playnite API, the menu labels should still be clear and the settings UI should show the current values.
+
+The settings UI should provide the same controls so users can review or change them outside the main menu.
 
 ------
 
@@ -179,12 +234,14 @@ Recommended settings:
 | Setting                                      | Type           | Default                                 | Description                                                  |
 | -------------------------------------------- | -------------- | --------------------------------------- | ------------------------------------------------------------ |
 | Enable automatic export after library update | Boolean        | true                                    | Export whenever Playnite finishes updating libraries         |
-| Export once on startup if file is missing    | Boolean        | true                                    | Creates the initial JSON file after installation             |
+| Export once on startup if file is missing    | Boolean        | true                                    | Creates the initial export file after installation           |
 | Export on every Playnite startup             | Boolean        | false                                   | Optional full startup export                                 |
-| Output directory                             | Directory path | User documents or plugin data directory | Folder where JSON file is written                            |
-| Output file name                             | String         | `playnite-library.json`                 | Name of exported JSON file                                   |
-| Pretty-print JSON                            | Boolean        | true                                    | Human-readable indentation                                   |
-| Include export metadata envelope             | Boolean        | true                                    | Use top-level object with metadata and games array           |
+| Output formats                              | Multi-select   | JSON selected                           | One or more of JSON, plain text (`.txt`), Markdown (`.md`), and CSV (`.csv`) |
+| Exclude games with tag/genre "visual novel" | Boolean        | false                                   | Exclude games with a matching Playnite tag or genre from all exports |
+| Output directory                             | Directory path | User documents or plugin data directory | Folder where export files are written                        |
+| Output file base name                        | String         | `playnite-library`                      | Base name used for all selected export files                  |
+| Pretty-print JSON                            | Boolean        | true                                    | Human-readable indentation for JSON exports                  |
+| Include export metadata envelope             | Boolean        | true                                    | Use top-level object with metadata and games array for JSON exports |
 | Include only core fields                     | Boolean        | false                                   | Future-compatible option; default should include useful metadata |
 | Show notification after automatic export     | Boolean        | false                                   | Quiet by default                                             |
 | Show notification after manual export        | Boolean        | true                                    | Confirm manual action                                        |
@@ -194,24 +251,30 @@ Settings should be validated before saving or before export.
 Validation requirements:
 
 - Output directory must be non-empty.
-- Output file name must be non-empty.
-- Output file name should end in `.json`; if not, either warn or append `.json`.
+- Output file base name must be non-empty.
+- At least one output format must be selected.
+- Each selected output format must be one of JSON, plain text, Markdown, or CSV.
+- Output file base name must not include a file extension.
+- If the user enters an extension in the base name, the plugin should either warn or strip the known extension before saving.
+- Generated output extensions: `.json`, `.txt`, `.md`, `.csv`.
 - Plugin should create the output directory if it does not exist.
 - Plugin should reject invalid path characters.
 - Plugin should handle permission failures gracefully.
 
 ------
 
-### FR-005: Export File Format
+### FR-005: JSON Export File Format
 
-The default export should use a top-level metadata envelope:
+JSON should be the default export format.
+
+The default JSON export should use a top-level metadata envelope:
 
 ```json
 {
   "schemaVersion": 1,
   "generatedAtUtc": "2026-06-05T00:00:00Z",
   "generator": {
-    "name": "Playnite Library JSON Exporter",
+    "name": "Playnite Library Exporter",
     "version": "1.0.0"
   },
   "playnite": {
@@ -219,7 +282,10 @@ The default export should use a top-level metadata envelope:
   },
   "export": {
     "totalGames": 123,
-    "steamAppIdCount": 80
+    "databaseGameCount": 123,
+    "excludedGameCount": 0,
+    "steamAppIdCount": 80,
+    "formats": ["json"]
   },
   "games": [
     {
@@ -238,7 +304,47 @@ The default export should use a top-level metadata envelope:
 }
 ```
 
-The plugin should keep the schema stable. Future breaking changes should increment `schemaVersion`.
+The plugin should keep the JSON schema stable. Future breaking changes should increment `schemaVersion`.
+
+------
+
+### FR-005A: Supported Export Formats
+
+The plugin must allow the user to select one or more output formats:
+
+| Format     | Extension | Intended use                                      |
+| ---------- | --------- | ------------------------------------------------- |
+| JSON       | `.json`   | Machine-readable structured automation            |
+| Plain text | `.txt`    | Simple human-readable list                        |
+| Markdown   | `.md`     | Notes, documentation, GitHub, and rendered preview |
+| CSV        | `.csv`    | Spreadsheet tools and tabular analysis            |
+
+The same game snapshot, sorting logic, Steam AppID inference, and configured filters must apply to all selected formats.
+
+Valid examples:
+
+- JSON only.
+- CSV only.
+- JSON plus plain text.
+- JSON plus plain text, Markdown, and CSV.
+
+Format-specific requirements:
+
+- JSON should include the full metadata envelope by default.
+- Plain text should use UTF-8 and include one game per line by default. Recommended line format: `Name [Steam AppID: 123456]`; omit the Steam AppID segment when unavailable.
+- Markdown should use UTF-8 and include a concise heading, export summary, and a table of games.
+- CSV should use UTF-8, include a header row, quote fields according to standard CSV rules, and use one row per exported game.
+- CSV should include stable columns for the required game fields and should include recommended optional fields only when they can be represented predictably.
+- Plain text and Markdown should be deterministic and suitable for version control diffs.
+- Format-specific serialization errors should be logged with the affected output format.
+- When multiple output formats are selected, the plugin should render and write each selected format during the same export operation.
+- Each selected format should produce a separate file in the output directory using the configured base name and the format's extension.
+
+Recommended CSV columns:
+
+```text
+playniteId,name,sortingName,providerGameId,pluginId,sourceId,sourceName,steamAppId,steamAppIdSource,steamAppIdConfidence,isInstalled,hidden,favorite,tags
+```
 
 ------
 
@@ -336,15 +442,17 @@ This makes diffs cleaner and avoids unnecessary churn in version-controlled expo
 
 ### FR-010: Atomic File Writes
 
-The plugin must avoid leaving a partially written JSON file.
+The plugin must avoid leaving a partially written export file.
 
 Recommended behavior:
 
-1. Serialize JSON into memory or a temporary file.
-2. Write to a temporary file in the target directory.
-3. Replace the target JSON file atomically or as close to atomically as practical on Windows.
-4. If replacement fails, preserve the previous export file when possible.
+1. Serialize each selected output format into memory or a temporary file.
+2. Write each output to a temporary file in the target directory.
+3. Replace each target export file atomically or as close to atomically as practical on Windows.
+4. If replacement fails for one format, preserve the previous export file for that format when possible.
 5. Clean up stale temporary files when safe.
+
+When multiple output formats are selected, each file write should be independently atomic. A failure writing one format should be logged clearly and reported after manual exports, including which formats succeeded and which failed.
 
 ------
 
@@ -370,7 +478,7 @@ The plugin must not freeze Playnite’s UI during normal use.
 Recommended implementation approach:
 
 - Capture the required Playnite game data safely.
-- Perform JSON serialization and file writing off the UI thread when appropriate.
+- Perform serialization and file writing off the UI thread when appropriate.
 - If Playnite SDK access must occur on the UI thread, take a lightweight snapshot first, then serialize/write in the background.
 - Use a lock, semaphore, or single-flight export queue to prevent concurrent writes.
 
@@ -385,7 +493,7 @@ The plugin must log:
 - Automatic export trigger.
 - Manual export trigger.
 - Export start.
-- Export success, including output path and game count.
+- Export success, including output path, selected output formats, exported game count, excluded game count, and Steam AppID count.
 - Export failure, including exception details.
 - Validation failures.
 
@@ -425,7 +533,7 @@ MVP must not:
 - Modify game metadata.
 - Delete user files except temporary files created by this plugin.
 
-The exported JSON may include local install paths if optional fields are enabled. If install paths are included by default, the settings UI should make this clear.
+The exported data may include local install paths if optional fields are enabled. If install paths are included by default, the settings UI should make this clear.
 
 Recommended default:
 
@@ -441,14 +549,14 @@ Recommended default:
 Manual export should be easy to find in Desktop mode:
 
 ```text
-Extensions → Playnite Library JSON Exporter → Export library now
+Extensions → Playnite Library Exporter → Export library now
 ```
 
 Optional additional menu items:
 
 ```text
-Extensions → Playnite Library JSON Exporter → Open export folder
-Extensions → Playnite Library JSON Exporter → Open settings
+Extensions → Playnite Library Exporter → Open export folder
+Extensions → Playnite Library Exporter → Open settings
 ```
 
 ### UX-002: Manual Export Feedback
@@ -458,9 +566,14 @@ After manual export success, show concise feedback:
 ```text
 Playnite library exported successfully.
 
+Formats: JSON, Markdown, CSV
 Games exported: 123
+Games excluded by filters: 0
 Steam AppIDs found: 80
-Output: C:\Users\<User>\Documents\PlayniteExports\playnite-library.json
+Outputs:
+C:\Users\<User>\Documents\PlayniteExports\playnite-library.json
+C:\Users\<User>\Documents\PlayniteExports\playnite-library.md
+C:\Users\<User>\Documents\PlayniteExports\playnite-library.csv
 ```
 
 After manual export failure, show concise feedback:
@@ -489,7 +602,9 @@ Automatic export after library update: Enabled
 Export once on startup if missing: Enabled
 Export on every startup: Disabled
 Output directory: %USERPROFILE%\Documents\PlayniteLibraryExport
-Output file name: playnite-library.json
+Output formats: JSON
+Output file base name: playnite-library
+Exclude games with tag/genre "visual novel": Disabled
 Pretty-print JSON: Enabled
 Include metadata envelope: Enabled
 Show automatic export notifications: Disabled
@@ -497,13 +612,13 @@ Show manual export notifications: Enabled
 Include local install paths: Enabled or configurable
 ```
 
-If environment variable expansion is supported, paths like `%USERPROFILE%` should be expanded before validation.
+If environment variable expansion is supported, paths like `%USERPROFILE%` should be expanded before validation. The plugin should derive output file names from the base name and selected formats, such as `playnite-library.json`, `playnite-library.txt`, `playnite-library.md`, and `playnite-library.csv`.
 
 ------
 
 ## 11. Data Model
 
-### 11.1 Export Envelope
+### 11.1 JSON Export Envelope
 
 | Field            | Type            | Description               |
 | ---------------- | --------------- | ------------------------- |
@@ -525,8 +640,11 @@ If environment variable expansion is supported, paths like `%USERPROFILE%` shoul
 
 | Field             | Type    | Description                                                  |
 | ----------------- | ------- | ------------------------------------------------------------ |
-| `totalGames`      | Integer | Number of exported games                                     |
+| `totalGames`      | Integer | Number of exported games after filters                       |
+| `databaseGameCount` | Integer | Number of games visible before filters                      |
+| `excludedGameCount` | Integer | Number of games excluded by filters                         |
 | `steamAppIdCount` | Integer | Number of games with non-null Steam AppID                    |
+| `formats`         | Array of strings | Selected output formats, such as `json`, `txt`, `markdown`, and `csv` |
 | `automatic`       | Boolean | Whether the export was automatic                             |
 | `trigger`         | String  | `manual`, `library-updated`, `startup-missing-file`, or `startup` |
 
@@ -592,20 +710,22 @@ Use the Playnite SDK to access:
 
 Do not read Playnite library files directly.
 
-### TR-004: JSON Serialization
+### TR-004: Export Serialization
 
-Use a reliable JSON serializer compatible with the plugin’s target framework and Playnite environment.
+Use reliable serializers compatible with the plugin’s target framework and Playnite environment.
 
 Requirements:
 
 - Stable property names.
-- Null values included for required fields.
-- Pretty print setting.
+- Null values included for required JSON fields.
+- Pretty print setting for JSON.
 - UTF-8 output.
 - Safe handling of nullable values.
 - No circular reference serialization from raw Playnite objects.
+- Correct CSV escaping and quoting.
+- Deterministic Markdown and plain-text rendering.
 
-The plugin should map Playnite SDK objects into simple export DTOs before serialization.
+The plugin should map Playnite SDK objects into simple export DTOs before serialization, then render each selected output format from those DTOs.
 
 ### TR-005: Build and Packaging
 
@@ -619,7 +739,7 @@ Deliverables:
 - Settings view files if needed.
 - README.
 - Build/package instructions.
-- Example output JSON.
+- Example output files for supported formats, at minimum JSON and CSV.
 
 ### TR-006: No Direct Playnite Source Modification
 
@@ -635,15 +755,17 @@ Given the plugin is installed in Playnite, when Playnite starts, the plugin load
 
 ### AC-002: Manual Export Works
 
-Given Playnite is open, when the user selects “Export library now,” then the plugin writes the configured JSON file and shows a success message.
+Given Playnite is open, when the user selects “Export library now,” then the plugin writes the configured export file or files and shows a success message.
 
 ### AC-003: Automatic Export Works
 
-Given automatic export is enabled, when Playnite finishes updating the library, then the plugin writes an updated JSON file without requiring manual user action.
+Given automatic export is enabled, when Playnite finishes updating the library, then the plugin writes updated export file or files without requiring manual user action.
 
-### AC-004: JSON Contains All Games
+### AC-004: Export Contains Expected Games
 
-Given the user has N games in the Playnite library, when the plugin exports JSON, then the exported `games` array contains N game objects unless a filter setting is explicitly enabled.
+Given the user has N games in the Playnite library, when the plugin exports with no filters enabled, then the export contains N games.
+
+Given the visual novel exclusion filter is enabled, when the plugin exports, then games with a Playnite tag or genre matching `visual novel` are excluded and other games remain included.
 
 ### AC-005: Steam AppID Detection Works for Steam Games
 
@@ -669,6 +791,18 @@ Given an existing valid export file, when an export fails during writing, then t
 
 Given the user changes plugin settings and restarts Playnite, then the settings persist and are applied to subsequent exports.
 
+### AC-011: Output Format Selection Works
+
+Given the user selects one output format from the plugin menu or settings, when an export runs, then the plugin writes only that selected format with the expected file extension and deterministic content.
+
+Given the user selects multiple output formats from the plugin menu or settings, when an export runs, then the plugin writes one file per selected format using the configured base name and each format's expected extension.
+
+Given the user attempts to deselect every output format, when the setting is saved or applied, then the plugin prevents the zero-output state and shows a clear validation message.
+
+### AC-012: Visual Novel Exclusion Menu Works
+
+Given the user toggles “Exclude games with tag/genre "visual novel"” from the plugin menu, when an export runs, then the toggle state is applied to the export and persists in settings.
+
 ------
 
 ## 14. Testing Plan
@@ -682,6 +816,11 @@ Test pure logic functions separately where possible:
 - Path validation.
 - Sorting.
 - JSON serialization.
+- Plain text rendering.
+- Markdown rendering.
+- CSV serialization and escaping.
+- Visual novel tag filtering.
+- Output format selection/default extension behavior.
 - Settings defaulting/migration.
 
 ### 14.2 Manual Integration Tests
@@ -698,6 +837,8 @@ Test with a Playnite library containing:
 8. Games with non-numeric provider IDs.
 9. Games with special characters in names.
 10. Large library, ideally 1,000+ games if available.
+11. Games tagged or genre-labeled `visual novel`, `Visual Novel`, and unrelated similar values.
+12. Games with multiple tags or genres where one value is `visual novel`.
 
 ### 14.3 Export Trigger Tests
 
@@ -709,7 +850,21 @@ Verify export occurs after:
 - Startup when file is missing, if enabled.
 - Startup always, if setting enabled.
 
-### 14.4 Failure Tests
+### 14.4 Export Format Tests
+
+Verify output format selection:
+
+- JSON only writes only `.json`.
+- CSV only writes only `.csv`.
+- Selecting all formats writes `.json`, `.txt`, `.md`, and `.csv`.
+- Each generated file uses the configured base name and expected extension.
+- Uses deterministic game ordering.
+- Applies the visual novel exclusion filter when enabled.
+- Includes Steam AppID data when available.
+- Handles commas, quotes, line breaks, and non-ASCII game names correctly.
+- Produces useful output for an empty filtered result set.
+
+### 14.5 Failure Tests
 
 Verify behavior when:
 
@@ -718,7 +873,9 @@ Verify behavior when:
 - Output file is locked.
 - Output path is invalid.
 - User lacks write permission.
-- JSON serialization encounters unexpected nulls.
+- Serialization encounters unexpected nulls.
+- No output formats are selected.
+- Output file base name includes an extension or invalid path characters.
 
 ------
 
@@ -760,20 +917,24 @@ The repository should include a README with:
 3. Build instructions.
 4. Playnite version/SDK requirements.
 5. How to configure output path.
-6. How to manually export.
-7. When automatic export runs.
-8. Explanation of Steam AppID detection.
-9. Example JSON output.
-10. Troubleshooting section.
-11. Limitations and future enhancements.
+6. How to select one or more output formats: JSON, plain text, Markdown, and/or CSV.
+7. How to exclude games tagged `visual novel`.
+8. How to manually export.
+9. When automatic export runs.
+10. Explanation of Steam AppID detection.
+11. Example outputs, including JSON and CSV.
+12. Troubleshooting section.
+13. Limitations and future enhancements.
 
 Suggested troubleshooting topics:
 
 - Plugin does not appear.
 - Export file is not created.
-- Permission denied writing JSON.
+- Permission denied writing export file.
 - Steam AppIDs missing for non-Steam games.
 - Automatic export does not appear to run.
+- Output format or generated file extension is not what the user expected.
+- Games with a `visual novel` tag or genre are still present because the metadata text does not exactly match.
 - Where to find Playnite logs.
 
 ------
@@ -789,7 +950,7 @@ Add a custom `playnite://` URI command to trigger export externally.
 Example future behavior:
 
 ```text
-playnite://library-json-exporter/export
+playnite://library-exporter/export
 ```
 
 This would allow Windows Task Scheduler, PowerShell, or another app to request an export while still using the Playnite plugin as the authority.
@@ -808,9 +969,9 @@ Requirements for future version:
 - Optionally export multiple candidates.
 - Allow user to disable external network access.
 
-### FE-003: CSV Export
+### FE-003: Rich Spreadsheet Export
 
-Add optional CSV output for spreadsheet tools.
+Add optional `.xlsx` export with formatted tables, filters, and multiple worksheets.
 
 ### FE-004: Export Only Changed Games
 
@@ -856,7 +1017,8 @@ Support multiple export targets, such as:
 
 - Read games from Playnite API.
 - Map games to DTOs.
-- Serialize JSON.
+- Apply configured filters.
+- Serialize each selected output format.
 - Write to configured path.
 - Add manual success/failure UI.
 
@@ -872,7 +1034,8 @@ Support multiple export targets, such as:
 - Add settings view.
 - Add validation.
 - Persist settings.
-- Support output path and JSON formatting options.
+- Support output path, output format selection, visual novel tag exclusion, and format-specific options.
+- Add menu options for output format toggles and visual novel tag exclusion.
 
 ### Phase 5: Robustness
 
@@ -902,10 +1065,10 @@ When implementing this PRD:
 5. Keep MVP fully local with no network calls.
 6. Make Steam AppID detection conservative.
 7. Prefer null Steam AppID over an incorrect Steam AppID.
-8. Write JSON atomically.
+8. Write exports atomically.
 9. Avoid blocking the Playnite UI.
 10. Add useful logging.
-11. Include README and example JSON.
+11. Include README and example outputs.
 12. Keep the code organized into clear components:
     - Plugin entry point.
     - Settings model.
@@ -913,6 +1076,8 @@ When implementing this PRD:
     - Export service.
     - Game DTO mapper.
     - Steam AppID inference helper.
+    - Visual novel tag filter.
+    - Format renderers.
     - File writer.
 13. Include comments only where they clarify non-obvious behavior.
 14. Avoid overengineering the MVP.
@@ -931,6 +1096,7 @@ These can be decided during implementation:
 5. Should manual export show a dialog or a Playnite notification? Either is acceptable; prefer the least intrusive standard Playnite UI pattern.
 6. Should the plugin include genre/category/tag metadata in MVP? Recommended: include if easy and safe; otherwise defer.
 7. Should the plugin include platform metadata in MVP? Recommended: include if easy and safe; otherwise defer.
+8. Should future filter matching support synonyms or variants such as `visual-novel`, or should MVP remain exact to `visual novel` only? Recommended MVP: exact tag match only.
 
 ------
 
@@ -939,11 +1105,14 @@ These can be decided during implementation:
 The MVP is complete when:
 
 1. The plugin loads successfully in Playnite.
-2. The user can configure an output JSON path.
+2. The user can configure an output path.
 3. The user can manually export the library from Playnite’s menu.
 4. The plugin automatically exports after Playnite finishes updating the library.
-5. The JSON contains all Playnite games.
-6. Each game contains at least:
+5. The user can select one or more output formats from JSON, plain text, Markdown, and CSV from the plugin menu or settings.
+6. The user can enable or disable exclusion of games tagged `visual novel` from the plugin menu or settings.
+7. With filters disabled, the export contains all Playnite games.
+8. With the visual novel exclusion filter enabled, games tagged or genre-labeled `visual novel` are excluded from all supported export formats.
+9. Each exported game contains at least:
    - Playnite ID.
    - Name.
    - Sorting name.
@@ -952,8 +1121,8 @@ The MVP is complete when:
    - Source ID.
    - Source name.
    - Steam AppID if confidently known.
-7. Steam games imported by the Steam library plugin receive correct Steam AppIDs when provider IDs are numeric.
-8. Non-Steam games are not falsely assigned Steam AppIDs.
-9. The JSON file is written atomically.
-10. Errors are logged and do not crash Playnite.
-11. The repository includes README, build instructions, and example output.
+10. Steam games imported by the Steam library plugin receive correct Steam AppIDs when provider IDs are numeric.
+11. Non-Steam games are not falsely assigned Steam AppIDs.
+12. The export file is written atomically.
+13. Errors are logged and do not crash Playnite.
+14. The repository includes README, build instructions, and example outputs.

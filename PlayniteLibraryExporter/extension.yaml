@@ -1,0 +1,7 @@
+Id: PlayniteLibraryExporter_7d089a0e-b862-44df-bca8-df3dc13165ee
+Name: Playnite Library Exporter
+Author: PlayniteLibraryExport
+Version: 1.0.0
+Module: PlayniteLibraryExporter.dll
+Type: GenericPlugin
+Icon: icon.png

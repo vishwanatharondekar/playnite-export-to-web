@@ -1,0 +1,73 @@
+<UserControl x:Class="PlayniteLibraryExporter.PlayniteLibraryExporterSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="560"
+             d:DesignWidth="680">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="12" MaxWidth="620">
+            <TextBlock Text="Automatic export" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <CheckBox Content="Export after Playnite finishes updating libraries"
+                      IsChecked="{Binding Settings.EnableAutomaticExportAfterLibraryUpdate}"
+                      Margin="0,0,0,6"/>
+            <CheckBox Content="Export once on startup if output file is missing"
+                      IsChecked="{Binding Settings.ExportOnceOnStartupIfFileIsMissing}"
+                      Margin="0,0,0,6"/>
+            <CheckBox Content="Export on every Playnite startup"
+                      IsChecked="{Binding Settings.ExportOnEveryPlayniteStartup}"
+                      Margin="0,0,0,16"/>
+
+            <TextBlock Text="Output formats" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <CheckBox Content="JSON (.json)"
+                      IsChecked="{Binding Settings.OutputJson}"
+                      Margin="0,0,0,6"/>
+            <CheckBox Content="Plain text (.txt)"
+                      IsChecked="{Binding Settings.OutputText}"
+                      Margin="0,0,0,6"/>
+            <CheckBox Content="Markdown (.md)"
+                      IsChecked="{Binding Settings.OutputMarkdown}"
+                      Margin="0,0,0,6"/>
+            <CheckBox Content="Spreadsheet CSV (.csv)"
+                      IsChecked="{Binding Settings.OutputCsv}"
+                      Margin="0,0,0,16"/>
+
+            <TextBlock Text="Filtering" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <CheckBox Content="Exclude games with tag or genre &quot;visual novel&quot;"
+                      IsChecked="{Binding Settings.ExcludeVisualNovelTag}"
+                      Margin="0,0,0,16"/>
+
+            <TextBlock Text="Output location" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <TextBlock Text="Directory" Margin="0,0,0,4"/>
+            <DockPanel Margin="0,0,0,8">
+                <Button Content="Browse..." Command="{Binding SelectOutputDirectoryCommand}" DockPanel.Dock="Right" Margin="8,0,0,0" MinWidth="86"/>
+                <TextBox Text="{Binding Settings.OutputDirectory, UpdateSourceTrigger=PropertyChanged}"/>
+            </DockPanel>
+            <TextBlock Text="File base name" Margin="0,0,0,4"/>
+            <TextBox Text="{Binding Settings.OutputFileBaseName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,16"/>
+
+            <TextBlock Text="Format options" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <CheckBox Content="Pretty-print JSON"
+                      IsChecked="{Binding Settings.PrettyPrintJson}"
+                      Margin="0,0,0,6"/>
+            <CheckBox Content="Include JSON metadata envelope"
+                      IsChecked="{Binding Settings.IncludeExportMetadataEnvelope}"
+                      Margin="0,0,0,6"/>
+            <CheckBox Content="Include only core fields"
+                      IsChecked="{Binding Settings.IncludeOnlyCoreFields}"
+                      Margin="0,0,0,6"/>
+            <CheckBox Content="Include local install paths"
+                      IsChecked="{Binding Settings.IncludeLocalInstallPaths}"
+                      Margin="0,0,0,16"/>
+
+            <TextBlock Text="Notifications" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <CheckBox Content="Show notification after automatic export"
+                      IsChecked="{Binding Settings.ShowNotificationAfterAutomaticExport}"
+                      Margin="0,0,0,6"/>
+            <CheckBox Content="Show notification after manual export"
+                      IsChecked="{Binding Settings.ShowNotificationAfterManualExport}"
+                      Margin="0,0,0,6"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

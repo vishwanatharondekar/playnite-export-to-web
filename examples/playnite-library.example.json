@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-06-05T00:00:00Z",
+  "generator": {
+    "name": "Playnite Library Exporter",
+    "version": "1.0.0.0"
+  },
+  "playnite": {
+    "databaseGameCount": 2
+  },
+  "export": {
+    "totalGames": 2,
+    "databaseGameCount": 2,
+    "excludedGameCount": 0,
+    "steamAppIdCount": 1,
+    "formats": [
+      "json",
+      "csv"
+    ],
+    "automatic": false,
+    "trigger": "manual"
+  },
+  "games": [
+    {
+      "playniteId": "00000000-0000-0000-0000-000000000001",
+      "name": "Example Steam Game",
+      "sortingName": "Example Steam Game",
+      "providerGameId": "123456",
+      "pluginId": "00000000-0000-0000-0000-000000000010",
+      "sourceId": "00000000-0000-0000-0000-000000000020",
+      "sourceName": "Steam",
+      "steamAppId": 123456,
+      "steamAppIdSource": "playnite-provider-game-id",
+      "steamAppIdConfidence": "exact",
+      "isInstalled": true,
+      "hidden": false,
+      "favorite": false,
+      "installDirectory": "C:\\Games\\Example Steam Game",
+      "platforms": [
+        "PC"
+      ],
+      "genres": [
+        "Action"
+      ],
+      "categories": [],
+      "tags": [
+        "Backlog"
+      ],
+      "lastActivity": null,
+      "playtimeSeconds": 3600,
+      "added": "2026-06-05T00:00:00Z",
+      "modified": "2026-06-05T00:00:00Z",
+      "releaseDate": "2024-01-01"
+    },
+    {
+      "playniteId": "00000000-0000-0000-0000-000000000002",
+      "name": "Example Non-Steam Game",
+      "sortingName": "Example Non-Steam Game",
+      "providerGameId": "example-game",
+      "pluginId": "00000000-0000-0000-0000-000000000011",
+      "sourceId": "00000000-0000-0000-0000-000000000021",
+      "sourceName": "GOG",
+      "steamAppId": null,
+      "steamAppIdSource": null,
+      "steamAppIdConfidence": "none",
+      "isInstalled": false,
+      "hidden": false,
+      "favorite": true,
+      "installDirectory": null,
+      "platforms": [
+        "PC"
+      ],
+      "genres": [
+        "Adventure"
+      ],
+      "categories": [],
+      "tags": [],
+      "lastActivity": null,
+      "playtimeSeconds": 0,
+      "added": "2026-06-05T00:00:00Z",
+      "modified": "2026-06-05T00:00:00Z",
+      "releaseDate": "2023"
+    }
+  ]
+}

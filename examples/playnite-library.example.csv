@@ -1,0 +1,3 @@
+playniteId,name,sortingName,providerGameId,pluginId,sourceId,sourceName,steamAppId,steamAppIdSource,steamAppIdConfidence,isInstalled,hidden,favorite,tags
+00000000-0000-0000-0000-000000000001,Example Steam Game,Example Steam Game,123456,00000000-0000-0000-0000-000000000010,00000000-0000-0000-0000-000000000020,Steam,123456,playnite-provider-game-id,exact,True,False,False,Backlog
+00000000-0000-0000-0000-000000000002,Example Non-Steam Game,Example Non-Steam Game,example-game,00000000-0000-0000-0000-000000000011,00000000-0000-0000-0000-000000000021,GOG,,,none,False,False,True,
