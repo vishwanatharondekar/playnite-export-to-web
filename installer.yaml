@@ -1,0 +1,12 @@
+AddonId: PlayniteLibraryExporter_7d089a0e-b862-44df-bca8-df3dc13165ee
+Packages:
+  - Version: 1.0.0
+    RequiredApiVersion: 6.16.0
+    ReleaseDate: 2026-06-05
+    PackageUrl: https://raw.githubusercontent.com/Dawnflare/PlayniteLibraryExport/main/dist/PlayniteLibraryExporter_7d089a0e-b862-44df-bca8-df3dc13165ee_1_0_0.pext
+    Changelog:
+      - Initial release of Playnite Library Exporter.
+      - Added JSON, plain text, Markdown, and CSV library exports.
+      - Added automatic export after library updates and optional startup exports.
+      - Added optional exclusion for games with a tag or genre named visual novel.
+      - Added conservative Steam AppID inference from Playnite Steam metadata.
