@@ -172,6 +172,22 @@ Playnite recommends Toolbox for extension packaging. Toolbox is optional for dev
 .\Playnite\Toolbox.exe pack .\PlayniteLibraryExporter\bin\Release .\dist
 ```
 
+## Playnite Add-on Database Publishing
+
+This repository includes an installer manifest for Playnite's add-on update system:
+
+```text
+installer.yaml
+```
+
+The official Playnite add-on database entry should point its `InstallerManifestUrl` to:
+
+```text
+https://raw.githubusercontent.com/Dawnflare/PlayniteLibraryExport/main/installer.yaml
+```
+
+The installer manifest points to the prebuilt `.pext` package committed under `dist`.
+
 ## Examples
 
 See `examples\playnite-library.example.json` and `examples\playnite-library.example.csv`.
