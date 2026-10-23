@@ -1,25 +1,36 @@
 # Builds the extension on Windows and packs it as a .pext.
-# Every run uploads the package as an artifact; pushing a tag like v1.0.0 also publishes a GitHub release.
+#
+# Every push to main is released: the version is <major.minor from extension.yaml>.<run number>,
+# stamped into the build only. After publishing the GitHub release, the workflow adds the version to
+# installer.yaml in a bot commit; that commit does not trigger another build (pushes made with
+# GITHUB_TOKEN never start workflows, it says [skip ci], and the job skips bot commits).
+# Pull requests and manual runs only build and upload the package as an artifact.
 name: Build
 
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false # releases must not be skipped or interleaved
+
 env:
   PLAYNITE_SDK_VERSION: "6.16.0" # keep in line with RequiredApiVersion in installer.yaml
 
 jobs:
   build:
+    if: github.actor != 'github-actions[bot]'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # tags and history for the changelog
 
       - uses: microsoft/setup-msbuild@v2
 
@@ -41,6 +52,23 @@ jobs:
           $refs = Get-NuGet "Microsoft.NETFramework.ReferenceAssemblies.net462" "1.0.3"
           "FRAMEWORK_ROOT=$refs\build\" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
+      - name: Stamp version
+        id: version
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $yamlPath = "PlayniteLibraryExporter\extension.yaml"
+          $yaml = Get-Content $yamlPath -Raw
+          $base = [regex]::Match($yaml, '(?m)^Version:\s*(\d+)\.(\d+)')
+          $version = "$($base.Groups[1].Value).$($base.Groups[2].Value).$env:GITHUB_RUN_NUMBER"
+          Set-Content $yamlPath ([regex]::Replace($yaml, '(?m)^Version:.*$', "Version: $version")) -NoNewline
+          $infoPath = "PlayniteLibraryExporter\Properties\AssemblyInfo.cs"
+          $info = Get-Content $infoPath -Raw
+          $info = [regex]::Replace($info, 'Assembly(File)?Version\("[^"]*"\)', { param($m) "Assembly$($m.Groups[1].Value)Version(""$version.0"")" })
+          Set-Content $infoPath $info -NoNewline
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          Write-Host "Version $version"
+
       - name: Build
         run: msbuild PlayniteLibraryExporter\PlayniteLibraryExporter.sln /t:Build /p:Configuration=Release /p:TargetFrameworkRootPath="${{ env.FRAMEWORK_ROOT }}" /v:minimal
 
@@ -51,7 +79,7 @@ jobs:
           $ErrorActionPreference = "Stop"
           $manifest = Get-Content PlayniteLibraryExporter\bin\Release\extension.yaml
           $id = ($manifest | Select-String '^Id:\s*(.+)$').Matches[0].Groups[1].Value.Trim()
-          $version = ($manifest | Select-String '^Version:\s*(.+)$').Matches[0].Groups[1].Value.Trim()
+          $version = "${{ steps.version.outputs.version }}"
           $name = "${id}_$($version.Replace('.', '_')).pext"
           $stage = Join-Path $env:RUNNER_TEMP "pext"
           New-Item -ItemType Directory -Force -Path $stage | Out-Null
@@ -60,7 +88,6 @@ jobs:
           # A .pext is a zip archive with extension.yaml at its root
           Compress-Archive -Path "$stage\*" -DestinationPath "out\$name.zip" -Force
           Move-Item "out\$name.zip" "out\$name" -Force
-          Get-ChildItem $stage -Recurse | Select-Object -ExpandProperty FullName
           "name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
       - uses: actions/upload-artifact@v4
@@ -70,7 +97,45 @@ jobs:
           if-no-files-found: error
 
       - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ github.ref_name }}" "out/${{ steps.pack.outputs.name }}" --title "${{ github.ref_name }}" --generate-notes
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = "${{ steps.version.outputs.version }}"
+          $name = "${{ steps.pack.outputs.name }}"
+
+          # Changelog: commit subjects since the previous release, without bot commits
+          $previous = git describe --tags --abbrev=0 --match "v*" 2>$null
+          $range = if ($previous) { "$previous..HEAD" } else { "HEAD" }
+          $subjects = @(git log $range --no-merges --format="%an`t%s" |
+            Where-Object { $_ -and -not $_.StartsWith("github-actions[bot]`t") } |
+            ForEach-Object { ($_ -split "`t", 2)[1] })
+          if (-not $subjects) { $subjects = @("Maintenance build.") }
+          $notes = ($subjects | ForEach-Object { "- $_" }) -join "`n"
+
+          gh release create "v$version" "out\$name" --target $env:GITHUB_SHA --title "v$version" --notes $notes
+
+          # Add the version to installer.yaml so Playnite's update check offers it
+          $quote = { param($s) "'" + $s.Replace("'", "''") + "'" }
+          $entry = @(
+            "  - Version: $version",
+            "    RequiredApiVersion: $env:PLAYNITE_SDK_VERSION",
+            "    ReleaseDate: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd'))",
+            "    PackageUrl: https://github.com/$env:GITHUB_REPOSITORY/releases/download/v$version/$name",
+            "    Changelog:"
+          ) + ($subjects | ForEach-Object { "      - " + (& $quote $_) })
+          $lines = [System.Collections.Generic.List[string]](Get-Content installer.yaml)
+          $at = $lines.IndexOf("Packages:") + 1
+          $lines.InsertRange($at, [string[]]$entry)
+          [System.IO.File]::WriteAllText((Resolve-Path installer.yaml), ($lines -join "`n") + "`n")
+
+          # Undo the version stamp so only installer.yaml is committed and the rebase has a clean tree
+          git checkout -- PlayniteLibraryExporter/extension.yaml PlayniteLibraryExporter/Properties/AssemblyInfo.cs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add installer.yaml
+          git commit -m "chore: add v$version to installer.yaml [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main

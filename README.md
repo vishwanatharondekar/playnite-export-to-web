@@ -73,11 +73,13 @@ A .NET Framework 4.6.2 WPF project; it builds on Windows only. It references the
 
 ## Releasing
 
-The **Build** workflow builds every push on Windows and uploads the `.pext` as an artifact. To publish a release:
+Every push to `main` is released automatically by the **Build** workflow:
 
-1. Bump `Version` in `PlayniteLibraryExporter/extension.yaml` (and `AssemblyVersion` in `Properties/AssemblyInfo.cs`).
-2. Add the version to `installer.yaml`, with `PackageUrl` pointing at `releases/download/v<version>/PlayniteLibraryWeb_6470f7f6-0f8e-4f44-a3f9-86c1cc82028f_<version with underscores>.pext`.
-3. Commit, then tag and push: `git tag v<version> && git push origin v<version>`. The workflow attaches the `.pext` to a GitHub release.
+1. The version is the major.minor from `PlayniteLibraryExporter/extension.yaml` plus the workflow run number (e.g. `1.0.7`); it is stamped into the build, not committed. Bump major or minor in `extension.yaml` for bigger releases.
+2. The `.pext` is published as GitHub release `v<version>`, with the commit subjects since the previous release as notes.
+3. The version is added to `installer.yaml` in a `github-actions[bot]` commit, which does not trigger another build.
+
+Pull requests and manual runs only build and upload the `.pext` as a workflow artifact.
 
 `installer.yaml` is the manifest for Playnite's add-on update system; register this URL in the Playnite add-on database:
 
