@@ -1,5 +1,13 @@
 AddonId: PlayniteLibraryWeb_6470f7f6-0f8e-4f44-a3f9-86c1cc82028f
 Packages:
+  - Version: 1.0.1
+    RequiredApiVersion: 6.16.0
+    ReleaseDate: 2026-10-23
+    PackageUrl: https://github.com/vishwanatharondekar/PlayniteLibraryWeb/releases/download/v1.0.1/PlayniteLibraryWeb_6470f7f6-0f8e-4f44-a3f9-86c1cc82028f_1_0_1.pext
+    Changelog:
+      - Settings now only cover the web library; the local file export, output formats and server address are removed.
+      - The library link follows handle renames made on the website.
+      - Changing settings or the visual novel filter uploads the library again.
   - Version: 1.0.0
     RequiredApiVersion: 6.16.0
     ReleaseDate: 2026-10-23
