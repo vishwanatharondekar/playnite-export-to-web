@@ -50,7 +50,9 @@ The local file export settings (formats, folder, automatic export after library 
 
 ## Install
 
-Build the extension (below), then either:
+Download the `.pext` from the [latest release](https://github.com/vishwanatharondekar/PlayniteLibraryWeb/releases/latest), close Playnite, and double-click it.
+
+To install a build of your own instead, either:
 
 - Pack it with `Toolbox.exe pack` and double-click the `.pext` file, or
 - Copy `PlayniteLibraryExporter\bin\Release\*` into `%AppData%\Playnite\Extensions\PlayniteLibraryWeb_6470f7f6-0f8e-4f44-a3f9-86c1cc82028f` (for a portable Playnite, `Playnite\Extensions\…` next to `Playnite.DesktopApp.exe`), so that `extension.yaml` and `PlayniteLibraryWeb.dll` sit directly inside that folder.
@@ -71,9 +73,15 @@ A .NET Framework 4.6.2 WPF project; it builds on Windows only. It references the
 .\Playnite\Toolbox.exe pack .\PlayniteLibraryExporter\bin\Release .\dist
 ```
 
-## Publishing
+## Releasing
 
-`installer.yaml` is the manifest for Playnite's add-on update system. It points at the `.pext` in `dist`; commit the packed file there before registering:
+The **Build** workflow builds every push on Windows and uploads the `.pext` as an artifact. To publish a release:
+
+1. Bump `Version` in `PlayniteLibraryExporter/extension.yaml` (and `AssemblyVersion` in `Properties/AssemblyInfo.cs`).
+2. Add the version to `installer.yaml`, with `PackageUrl` pointing at `releases/download/v<version>/PlayniteLibraryWeb_6470f7f6-0f8e-4f44-a3f9-86c1cc82028f_<version with underscores>.pext`.
+3. Commit, then tag and push: `git tag v<version> && git push origin v<version>`. The workflow attaches the `.pext` to a GitHub release.
+
+`installer.yaml` is the manifest for Playnite's add-on update system; register this URL in the Playnite add-on database:
 
 ```text
 https://raw.githubusercontent.com/vishwanatharondekar/PlayniteLibraryWeb/main/installer.yaml
