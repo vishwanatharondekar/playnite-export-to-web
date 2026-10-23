@@ -1,0 +1,76 @@
+# Builds the extension on Windows and packs it as a .pext.
+# Every run uploads the package as an artifact; pushing a tag like v1.0.0 also publishes a GitHub release.
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PLAYNITE_SDK_VERSION: "6.16.0" # keep in line with RequiredApiVersion in installer.yaml
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Fetch Playnite SDK and .NET Framework 4.6.2 reference assemblies
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          function Get-NuGet($id, $version) {
+            $dir = Join-Path $env:RUNNER_TEMP "$id.$version"
+            $pkg = "$dir.zip"
+            Invoke-WebRequest "https://api.nuget.org/v3-flatcontainer/$($id.ToLower())/$version/$($id.ToLower()).$version.nupkg" -OutFile $pkg
+            Expand-Archive $pkg -DestinationPath $dir -Force
+            return $dir
+          }
+          # The project references ..\Playnite\Playnite.SDK.dll (a portable Playnite copy locally)
+          $sdk = Get-NuGet "PlayniteSDK" $env:PLAYNITE_SDK_VERSION
+          New-Item -ItemType Directory -Force -Path Playnite | Out-Null
+          Copy-Item "$sdk\lib\net462\Playnite.SDK.dll" Playnite\
+          $refs = Get-NuGet "Microsoft.NETFramework.ReferenceAssemblies.net462" "1.0.3"
+          "FRAMEWORK_ROOT=$refs\build\" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Build
+        run: msbuild PlayniteLibraryExporter\PlayniteLibraryExporter.sln /t:Build /p:Configuration=Release /p:TargetFrameworkRootPath="${{ env.FRAMEWORK_ROOT }}" /v:minimal
+
+      - name: Pack .pext
+        id: pack
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $manifest = Get-Content PlayniteLibraryExporter\bin\Release\extension.yaml
+          $id = ($manifest | Select-String '^Id:\s*(.+)$').Matches[0].Groups[1].Value.Trim()
+          $version = ($manifest | Select-String '^Version:\s*(.+)$').Matches[0].Groups[1].Value.Trim()
+          $name = "${id}_$($version.Replace('.', '_')).pext"
+          $stage = Join-Path $env:RUNNER_TEMP "pext"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Copy-Item PlayniteLibraryExporter\bin\Release\* $stage -Recurse -Exclude *.pdb
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          # A .pext is a zip archive with extension.yaml at its root
+          Compress-Archive -Path "$stage\*" -DestinationPath "out\$name.zip" -Force
+          Move-Item "out\$name.zip" "out\$name" -Force
+          Get-ChildItem $stage -Recurse | Select-Object -ExpandProperty FullName
+          "name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.pack.outputs.name }}
+          path: out/${{ steps.pack.outputs.name }}
+          if-no-files-found: error
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" "out/${{ steps.pack.outputs.name }}" --title "${{ github.ref_name }}" --generate-notes
