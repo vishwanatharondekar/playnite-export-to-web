@@ -6,9 +6,53 @@
              mc:Ignorable="d"
              d:DesignHeight="560"
              d:DesignWidth="680">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="Visible"/>
+    </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="12" MaxWidth="620">
-            <TextBlock Text="Automatic export" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <TextBlock Text="Web library" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <TextBlock Text="{Binding WebStatusText}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+            <TextBlock Visibility="{Binding IsWebLinking, Converter={StaticResource Visible}}"
+                       Text="{Binding WebLinkCode}" FontSize="24" FontFamily="Consolas" FontWeight="Bold" Margin="0,0,0,8"/>
+            <TextBlock Visibility="{Binding HasWebError, Converter={StaticResource Visible}}"
+                       Text="{Binding WebError}" TextWrapping="Wrap" Foreground="IndianRed" Margin="0,0,0,8"/>
+            <TextBox Visibility="{Binding IsWebLinked, Converter={StaticResource Visible}}"
+                     Text="{Binding WebLibraryUrl, Mode=OneWay}" IsReadOnly="True" Margin="0,0,0,8"/>
+
+            <WrapPanel Margin="0,0,0,8">
+                <Button Content="Link account..." Command="{Binding LinkCommand}" Margin="0,0,8,4" MinWidth="110"
+                        Visibility="{Binding IsWebNotLinked, Converter={StaticResource Visible}}"/>
+                <Button Content="Cancel" Command="{Binding CancelLinkCommand}" Margin="0,0,8,4" MinWidth="86"
+                        Visibility="{Binding IsWebLinking, Converter={StaticResource Visible}}"/>
+                <Button Content="Open library" Command="{Binding OpenLibraryCommand}" Margin="0,0,8,4" MinWidth="86"
+                        Visibility="{Binding IsWebLinked, Converter={StaticResource Visible}}"/>
+                <Button Content="Copy link" Command="{Binding CopyLibraryLinkCommand}" Margin="0,0,8,4" MinWidth="86"
+                        Visibility="{Binding IsWebLinked, Converter={StaticResource Visible}}"/>
+                <Button Content="Upload now" Command="{Binding UploadNowCommand}" Margin="0,0,8,4" MinWidth="86"
+                        Visibility="{Binding IsWebLinked, Converter={StaticResource Visible}}"/>
+                <Button Content="Manage on website" Command="{Binding OpenAccountCommand}" Margin="0,0,8,4" MinWidth="86"
+                        Visibility="{Binding IsWebLinked, Converter={StaticResource Visible}}"/>
+                <Button Content="Unlink this PC" Command="{Binding UnlinkCommand}" Margin="0,0,8,4" MinWidth="86"
+                        Visibility="{Binding IsWebLinked, Converter={StaticResource Visible}}"/>
+            </WrapPanel>
+
+            <CheckBox Content="Upload automatically (on startup, after library updates, after playing and after edits)"
+                      IsChecked="{Binding Settings.AutoUpload}"
+                      Margin="0,0,0,6"/>
+            <CheckBox Content="Include hidden games"
+                      IsChecked="{Binding Settings.IncludeHiddenGames}"
+                      Margin="0,0,0,6"/>
+            <TextBlock Text="Uploads contain game names, playtime, last played dates, tags, genres and store IDs. Install folders are never uploaded. Games excluded by the visual novel filter below are not uploaded either."
+                       TextWrapping="Wrap" Opacity="0.7" Margin="0,0,0,8"/>
+            <TextBlock Text="PC name (shown on the website)" Margin="0,0,0,4"/>
+            <TextBox Text="{Binding Settings.DeviceName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"/>
+            <TextBlock Text="Server" Margin="0,0,0,4"/>
+            <TextBox Text="{Binding Settings.ServerUrl, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
+            <TextBlock Text="Only change this if you run your own copy of the site. Changing it requires linking again."
+                       TextWrapping="Wrap" Opacity="0.7" Margin="0,0,0,16"/>
+
+            <TextBlock Text="Automatic file export" FontWeight="SemiBold" Margin="0,0,0,8"/>
             <CheckBox Content="Export after Playnite finishes updating libraries"
                       IsChecked="{Binding Settings.EnableAutomaticExportAfterLibraryUpdate}"
                       Margin="0,0,0,6"/>

@@ -1,7 +1,10 @@
-Id: PlayniteLibraryExporter_7d089a0e-b862-44df-bca8-df3dc13165ee
-Name: Playnite Library Exporter
-Author: PlayniteLibraryExport
+Id: PlayniteLibraryWeb_6470f7f6-0f8e-4f44-a3f9-86c1cc82028f
+Name: Playnite Library Web
+Author: Vishwanath Arondekar
 Version: 1.0.0
-Module: PlayniteLibraryExporter.dll
+Module: PlayniteLibraryWeb.dll
 Type: GenericPlugin
 Icon: icon.png
+Links:
+  - Name: Source
+    Url: https://github.com/vishwanatharondekar/PlayniteLibraryWeb

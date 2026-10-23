@@ -1,5 +1,6 @@
 using Playnite.SDK;
 using Playnite.SDK.Events;
+using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
 using System;
 using System.Collections.Generic;
@@ -15,15 +16,16 @@ namespace PlayniteLibraryExporter
 {
     public class PlayniteLibraryExporter : GenericPlugin
     {
-        private const string MenuRoot = "Playnite Library Exporter";
+        private const string MenuRoot = WebConfig.PluginName;
         private const int AutomaticExportDebounceMilliseconds = 3000;
         private static readonly ILogger logger = LogManager.GetLogger();
 
         private readonly PlayniteLibraryExporterSettingsViewModel settingsViewModel;
         private readonly ExportService exportService;
+        private readonly WebSyncService webSync;
         private CancellationTokenSource automaticExportDebounce;
 
-        public override Guid Id { get; } = Guid.Parse("7d089a0e-b862-44df-bca8-df3dc13165ee");
+        public override Guid Id { get; } = Guid.Parse("6470f7f6-0f8e-4f44-a3f9-86c1cc82028f");
 
         public IPlayniteAPI Api => PlayniteApi;
 
@@ -31,17 +33,24 @@ namespace PlayniteLibraryExporter
         {
             settingsViewModel = new PlayniteLibraryExporterSettingsViewModel(this);
             exportService = new ExportService(api, () => settingsViewModel.Settings, logger);
+            webSync = new WebSyncService(api, () => settingsViewModel.Settings, new WebLinkStore(GetPluginUserDataPath()), logger);
+            settingsViewModel.AttachWeb(webSync);
             Properties = new GenericPluginProperties
             {
                 HasSettings = true
             };
 
-            logger.Info("Playnite Library Exporter loaded.");
+            logger.Info($"{MenuRoot} loaded.");
         }
 
         public override void OnApplicationStarted(OnApplicationStartedEventArgs args)
         {
-            logger.Info("Playnite Library Exporter application-started hook.");
+            logger.Info($"{MenuRoot} application-started hook.");
+            PlayniteApi.Database.Games.ItemUpdated += OnGamesUpdated;
+            PlayniteApi.Database.Games.ItemCollectionChanged += OnGamesAddedOrRemoved;
+            // Forced: the server skips unchanged libraries, and this recovers from anything missed while closed
+            webSync.ScheduleUpload("startup", WebConfig.LibraryUpdatedDelayMs, force: true);
+
             var settings = settingsViewModel.Settings;
             if (settings.ExportOnEveryPlayniteStartup)
             {
@@ -55,8 +64,33 @@ namespace PlayniteLibraryExporter
             }
         }
 
+        public override void OnApplicationStopped(OnApplicationStoppedEventArgs args)
+        {
+            PlayniteApi.Database.Games.ItemUpdated -= OnGamesUpdated;
+            PlayniteApi.Database.Games.ItemCollectionChanged -= OnGamesAddedOrRemoved;
+        }
+
+        public override void OnGameStopped(OnGameStoppedEventArgs args)
+        {
+            // Playtime and last played changed
+            webSync.ScheduleUpload("game-stopped", WebConfig.GameStoppedDelayMs);
+        }
+
+        private void OnGamesUpdated(object sender, ItemUpdatedEventArgs<Game> args)
+        {
+            // Edits such as tags, favourites or hiding; bursts (e.g. metadata downloads) upload once
+            webSync.ScheduleUpload("game-edited", WebConfig.GameEditedDelayMs);
+        }
+
+        private void OnGamesAddedOrRemoved(object sender, ItemCollectionChangedEventArgs<Game> args)
+        {
+            webSync.ScheduleUpload("games-added-removed", WebConfig.GameEditedDelayMs);
+        }
+
         public override void OnLibraryUpdated(OnLibraryUpdatedEventArgs args)
         {
+            webSync.ScheduleUpload("library-updated", WebConfig.LibraryUpdatedDelayMs);
+
             if (!settingsViewModel.Settings.EnableAutomaticExportAfterLibraryUpdate)
             {
                 return;
@@ -69,9 +103,21 @@ namespace PlayniteLibraryExporter
         public override IEnumerable<MainMenuItem> GetMainMenuItems(GetMainMenuItemsArgs args)
         {
             var settings = settingsViewModel.Settings;
-            return new List<MainMenuItem>
+            var webItems = webSync.IsLinked
+                ? new List<MainMenuItem>
+                {
+                    MenuItem("Open my web library", $"{MenuRoot}", _ => webSync.OpenLibrary()),
+                    MenuItem("Upload to web library now", $"{MenuRoot}", _ => UploadToWebNow()),
+                    MenuItem("Unlink this PC from the web library", $"{MenuRoot}", _ => UnlinkWeb())
+                }
+                : new List<MainMenuItem>
+                {
+                    MenuItem("Link web library account...", $"{MenuRoot}", _ => StartWebLink())
+                };
+
+            return webItems.Concat(new List<MainMenuItem>
             {
-                MenuItem("Export library now", $"{MenuRoot}", menuArgs => RunManualExport()),
+                MenuItem("Export library to file now", $"{MenuRoot}", menuArgs => RunManualExport()),
                 MenuItem(FormatToggleLabel(settings.OutputJson, "JSON"), $"{MenuRoot}|Output formats", _ => ToggleFormat(ExportFormat.Json)),
                 MenuItem(FormatToggleLabel(settings.OutputText, "Plain text (.txt)"), $"{MenuRoot}|Output formats", _ => ToggleFormat(ExportFormat.Text)),
                 MenuItem(FormatToggleLabel(settings.OutputMarkdown, "Markdown (.md)"), $"{MenuRoot}|Output formats", _ => ToggleFormat(ExportFormat.Markdown)),
@@ -79,7 +125,57 @@ namespace PlayniteLibraryExporter
                 MenuItem(FormatToggleLabel(settings.ExcludeVisualNovelTag, "Exclude games with tag/genre \"visual novel\""), $"{MenuRoot}", _ => ToggleVisualNovelFilter()),
                 MenuItem("Open export folder", $"{MenuRoot}", _ => OpenExportFolder()),
                 MenuItem("Open settings", $"{MenuRoot}", _ => PlayniteApi.MainView.OpenPluginSettings(Id))
-            };
+            });
+        }
+
+        // ---------- Web library ----------
+
+        public async void StartWebLink()
+        {
+            try
+            {
+                var code = await webSync.StartLinkAsync();
+                PlayniteApi.Dialogs.ShowMessage(
+                    "A browser window opened on your web library." + Environment.NewLine + Environment.NewLine +
+                    "Sign in, then check that it shows this code and click Link:" + Environment.NewLine + Environment.NewLine +
+                    code + Environment.NewLine + Environment.NewLine +
+                    "This PC links automatically once you approve, and your library uploads right after.",
+                    MenuRoot);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Could not start web library linking.");
+                PlayniteApi.Dialogs.ShowErrorMessage("Could not start linking: " + ex.Message, MenuRoot);
+            }
+        }
+
+        public async void UnlinkWeb()
+        {
+            var answer = PlayniteApi.Dialogs.ShowMessage(
+                "Stop uploading from this PC? Your web library stays online with its last upload; delete it from the website if you want it gone.",
+                MenuRoot, MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (answer == MessageBoxResult.Yes)
+            {
+                await webSync.UnlinkAsync();
+            }
+        }
+
+        public async void UploadToWebNow()
+        {
+            if (!webSync.IsLinked)
+            {
+                StartWebLink();
+                return;
+            }
+
+            if (await webSync.UploadNowAsync("manual", true))
+            {
+                PlayniteApi.Dialogs.ShowMessage($"Your library was uploaded.{Environment.NewLine}{webSync.State.LibraryUrl}", MenuRoot);
+            }
+            else if (!string.IsNullOrEmpty(webSync.LastError))
+            {
+                PlayniteApi.Dialogs.ShowErrorMessage(webSync.LastError, MenuRoot);
+            }
         }
 
         public override ISettings GetSettings(bool firstRunSettings)
@@ -134,7 +230,7 @@ namespace PlayniteLibraryExporter
             if (!settings.GetSelectedFormats().Any())
             {
                 SetFormat(format, true);
-                PlayniteApi.Dialogs.ShowErrorMessage("At least one output format must remain selected.", "Playnite Library Exporter");
+                PlayniteApi.Dialogs.ShowErrorMessage("At least one output format must remain selected.", MenuRoot);
                 return;
             }
 
@@ -208,11 +304,11 @@ namespace PlayniteLibraryExporter
             {
                 if (automatic && settings.ShowNotificationAfterAutomaticExport)
                 {
-                    PlayniteApi.Notifications.Add("PlayniteLibraryExporterSuccess", FormatSuccessSummary(result), NotificationType.Info);
+                    PlayniteApi.Notifications.Add("PlayniteLibraryWebExportSuccess", FormatSuccessSummary(result), NotificationType.Info);
                 }
                 else if (!automatic && settings.ShowNotificationAfterManualExport)
                 {
-                    PlayniteApi.Dialogs.ShowMessage(FormatSuccessMessage(result), "Playnite Library Exporter");
+                    PlayniteApi.Dialogs.ShowMessage(FormatSuccessMessage(result), MenuRoot);
                 }
             }
             else
@@ -220,11 +316,11 @@ namespace PlayniteLibraryExporter
                 var message = FormatFailureMessage(result);
                 if (automatic)
                 {
-                    PlayniteApi.Notifications.Add("PlayniteLibraryExporterFailure", message, NotificationType.Error);
+                    PlayniteApi.Notifications.Add("PlayniteLibraryWebExportFailure", message, NotificationType.Error);
                 }
                 else
                 {
-                    PlayniteApi.Dialogs.ShowErrorMessage(message, "Playnite Library Exporter");
+                    PlayniteApi.Dialogs.ShowErrorMessage(message, MenuRoot);
                 }
             }
         }

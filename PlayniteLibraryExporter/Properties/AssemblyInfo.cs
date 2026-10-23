@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Playnite Library Exporter")]
-[assembly: AssemblyDescription("Exports the Playnite game library to JSON, plain text, Markdown, and CSV.")]
+[assembly: AssemblyTitle("Playnite Library Web")]
+[assembly: AssemblyDescription("Publishes the Playnite game library as a web page and exports it to JSON, plain text, Markdown, and CSV.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("PlayniteLibraryExport")]
-[assembly: AssemblyProduct("Playnite Library Exporter")]
-[assembly: AssemblyCopyright("Copyright © 2026")]
+[assembly: AssemblyCompany("Vishwanath Arondekar")]
+[assembly: AssemblyProduct("Playnite Library Web")]
+[assembly: AssemblyCopyright("Copyright © 2026 Dawnflare, Vishwanath Arondekar")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("7d089a0e-b862-44df-bca8-df3dc13165ee")]
+[assembly: Guid("6470f7f6-0f8e-4f44-a3f9-86c1cc82028f")]
 
 // Version information for an assembly consists of the following four values:
 //

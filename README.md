@@ -1,193 +1,91 @@
-# Playnite Library Exporter
+# Playnite Library Web
 
-Playnite Library Exporter is a Playnite Generic Plugin that exports the current Playnite game library to local files.
+A [Playnite](https://playnite.link/) extension that publishes your game library as a web page that stays up to date: browse, filter and sort by store, genre, tags and play stats, on any device, and share the link.
 
-Supported output formats:
+Based on [Playnite Library Exporter](https://github.com/Dawnflare/PlayniteLibraryExport) by Dawnflare (MIT), and still includes its local JSON, plain text, Markdown and CSV exports.
 
-- JSON (`.json`)
-- Plain text (`.txt`)
-- Markdown (`.md`)
-- CSV (`.csv`)
+The website lives in a separate repository ([playnite-library](https://github.com/vishwanatharondekar/playnite-library)).
 
-JSON is enabled by default. Users can enable one or more output formats at the same time from the plugin menu or settings.
+## Getting started
 
-## Quick Install
+1. Install the extension (see [Install](#install)) and restart Playnite.
+2. Open `Extensions -> Playnite Library Web -> Link web library account...`, or click **Link account...** in the extension's settings.
+3. A browser window opens. Sign in, choose your handle the first time, check the code matches the one Playnite shows, and click **Link**.
+4. Your library uploads within a few seconds and is public at `https://<server>/u/<handle>`.
 
-Use the prebuilt package in this repository:
+Each PC links separately; manage linked PCs, your handle and search engine visibility from **Manage on website**.
 
-```text
-dist\PlayniteLibraryExporter_7d089a0e-b862-44df-bca8-df3dc13165ee_1_0_0.pext
-```
+## What gets uploaded, and when
 
-The matching SHA-256 checksum is stored next to it:
+Uploads happen automatically (unless turned off in settings):
 
-```text
-dist\PlayniteLibraryExporter_7d089a0e-b862-44df-bca8-df3dc13165ee_1_0_0.sha256
-```
+| When | Delay |
+| --- | --- |
+| Playnite starts | 5 s |
+| Playnite finishes a library update | 5 s |
+| A game session ends (playtime, last played) | 10 s |
+| Games are edited, added or removed (tags, favourites, hiding, …) | 30 s after the last change |
 
-Recommended installation:
+Bursts of changes upload once, and unchanged libraries are not re-sent. `Upload to web library now` uploads immediately.
 
-1. Close Playnite.
-2. Double-click the `.pext` file above.
-3. Allow Playnite to install the extension.
-4. Start or restart Playnite.
-5. Open `Extensions -> Playnite Library Exporter`.
-6. Choose `Export library now`, or open settings to configure automatic exports.
+- **Uploaded:** each game's name, store and store ID, platforms, genres, tags, categories, playtime, last played, added/modified dates, release date and installed/favourite/hidden flags.
+- **Never uploaded:** install folders.
+- **Not uploaded by default:** hidden games (`Include hidden games` in settings).
+- **Not uploaded when the visual novel filter is on:** games with a tag or genre named `visual novel`.
 
-If double-click installation is not associated with Playnite on your system, use the manual install method below.
+The link is stored per Windows user in the extension's data folder, encrypted with Windows DPAPI. `Unlink this PC` revokes it on the server too.
 
-## Manual Install
+## Configuration
 
-Manual install does not require building the project.
+| Setting | Default |
+| --- | --- |
+| Upload automatically | On |
+| Include hidden games | Off |
+| PC name (shown on the website) | The Windows computer name |
+| Server | `https://playnite-library.vercel.app` |
 
-1. Close Playnite.
-2. Create this folder inside your Playnite extensions directory:
+The default server is `WebConfig.DefaultServerUrl` in [`WebConfig.cs`](PlayniteLibraryExporter/WebConfig.cs); change it there when the site moves to its own domain. Users can also override it in settings (linking again is required after a change).
 
-   ```text
-   Extensions\PlayniteLibraryExporter_7d089a0e-b862-44df-bca8-df3dc13165ee
-   ```
+The local file export settings (formats, folder, automatic export after library updates, notifications) work as in Playnite Library Exporter; exports go to `%USERPROFILE%\Documents\PlayniteLibraryExport` by default.
 
-3. Open the prebuilt package in `dist`. A `.pext` file is a ZIP-compatible archive.
-4. Extract the package contents into the folder from step 2.
-5. Confirm the folder contains these files directly:
+## Install
 
-   ```text
-   extension.yaml
-   PlayniteLibraryExporter.dll
-   icon.png
-   Localization\
-   ```
+Build the extension (below), then either:
 
-6. Start Playnite.
-7. Confirm `Extensions -> Playnite Library Exporter` appears in the main menu.
+- Pack it with `Toolbox.exe pack` and double-click the `.pext` file, or
+- Copy `PlayniteLibraryExporter\bin\Release\*` into `%AppData%\Playnite\Extensions\PlayniteLibraryWeb_6470f7f6-0f8e-4f44-a3f9-86c1cc82028f` (for a portable Playnite, `Playnite\Extensions\…` next to `Playnite.DesktopApp.exe`), so that `extension.yaml` and `PlayniteLibraryWeb.dll` sit directly inside that folder.
 
-For the portable Playnite instance included in this repository, the final install folder is:
+Playnite Library Web has its own add-on id, so it can be installed next to Playnite Library Exporter.
 
-```text
-Playnite\Extensions\PlayniteLibraryExporter_7d089a0e-b862-44df-bca8-df3dc13165ee
-```
+## Developer build
 
-## First Export
-
-After installation:
-
-1. Open Playnite.
-2. Select `Extensions -> Playnite Library Exporter -> Export library now`.
-3. The default output is written to:
-
-   ```text
-   %USERPROFILE%\Documents\PlayniteLibraryExport\playnite-library.json
-   ```
-
-If your Windows Documents folder is redirected to OneDrive, the file may appear under:
-
-```text
-%USERPROFILE%\OneDrive\Documents\PlayniteLibraryExport
-```
-
-## Settings
-
-Open plugin settings from either:
-
-```text
-Extensions -> Playnite Library Exporter -> Open settings
-```
-
-or Playnite's add-on/settings UI.
-
-Default settings:
-
-- Automatic export after library update: enabled
-- Export once on startup if output file is missing: enabled
-- Export on every startup: disabled
-- Output formats: JSON
-- Output directory: `%USERPROFILE%\Documents\PlayniteLibraryExport`
-- Output file base name: `playnite-library`
-- Exclude games with tag/genre `visual novel`: disabled
-- Pretty-print JSON: enabled
-
-When multiple formats are selected, the plugin writes one file per format, such as:
-
-```text
-playnite-library.json
-playnite-library.txt
-playnite-library.md
-playnite-library.csv
-```
-
-## Features
-
-- Manual export from `Extensions -> Playnite Library Exporter -> Export library now`
-- Automatic export after Playnite library updates
-- Optional startup export
-- Optional exclusion of games with a tag or genre named `visual novel`
-- Conservative Steam AppID inference from Steam source plus numeric provider game ID
-- Deterministic output ordering
-- Atomic file writes per selected output file
-- Local-only operation with no network calls
-
-## Steam AppID Detection
-
-Steam AppIDs are exported only when the game source is `Steam` and Playnite's provider game ID is a positive integer. Non-Steam games are left with `steamAppId: null`.
-
-## Troubleshooting
-
-- Plugin does not appear: confirm `extension.yaml` and `PlayniteLibraryExporter.dll` are directly inside the plugin extension folder, not nested one folder deeper.
-- Export file is not created: check output directory permissions and Playnite logs.
-- No output format can be saved: at least one output format must remain selected.
-- Visual novels are still present: confirm the Playnite tag or genre is exactly `visual novel`, ignoring case and surrounding spaces.
-- Steam AppIDs are missing: confirm the game source is Steam and the provider game ID is numeric.
-- `.pext` does not open with Playnite: use the manual install method above.
-
-## Developer Build
-
-Building is only needed if you want to modify the plugin source. Normal installation can use the prebuilt `.pext` package in `dist`.
-
-The project is a standalone .NET Framework plugin project. It references the portable Playnite SDK at `..\Playnite\Playnite.SDK.dll` from the plugin project directory.
+A .NET Framework 4.6.2 WPF project; it builds on Windows only. It references the Playnite SDK at `Playnite\Playnite.SDK.dll` in the repository root (a portable Playnite copy, git-ignored).
 
 ```powershell
 & 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\MSBuild\Current\Bin\amd64\MSBuild.exe' `
   'PlayniteLibraryExporter\PlayniteLibraryExporter.sln' `
   /t:Build `
   /p:Configuration=Release
-```
 
-The compiled extension files are written to:
-
-```text
-PlayniteLibraryExporter\bin\Release
-```
-
-To copy a Release build into the included portable Playnite instance:
-
-```powershell
-.\scripts\Install-Portable.ps1 -Configuration Release
-```
-
-## Developer Package
-
-Playnite recommends Toolbox for extension packaging. Toolbox is optional for development and runtime; the plugin project does not depend on it.
-
-```powershell
+.\scripts\Install-Portable.ps1 -Configuration Release   # copy into the portable Playnite
 .\Playnite\Toolbox.exe pack .\PlayniteLibraryExporter\bin\Release .\dist
 ```
 
-## Playnite Add-on Database Publishing
+## Publishing
 
-This repository includes an installer manifest for Playnite's add-on update system:
-
-```text
-installer.yaml
-```
-
-The official Playnite add-on database entry should point its `InstallerManifestUrl` to:
+`installer.yaml` is the manifest for Playnite's add-on update system. It points at the `.pext` in `dist`; commit the packed file there before registering:
 
 ```text
-https://raw.githubusercontent.com/Dawnflare/PlayniteLibraryExport/main/installer.yaml
+https://raw.githubusercontent.com/vishwanatharondekar/PlayniteLibraryWeb/main/installer.yaml
 ```
 
-The installer manifest points to the prebuilt `.pext` package committed under `dist`.
+## Troubleshooting
+
+- **Linking says the code expired:** codes last 10 minutes. Start again from the settings.
+- **"This PC was unlinked":** the PC was unlinked from the website, or the server changed. Link again.
+- **Uploads fail:** check `Extensions -> Playnite Library Web` errors in Playnite's notifications and `extensions.log` in the Playnite folder.
+- **Plugin does not appear:** confirm `extension.yaml` and `PlayniteLibraryWeb.dll` are directly inside the extension folder.
 
 ## Examples
 
-See `examples\playnite-library.example.json` and `examples\playnite-library.example.csv`.
+See `examples\playnite-library.example.json` and `examples\playnite-library.example.csv` for the file export format.
