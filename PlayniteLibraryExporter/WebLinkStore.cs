@@ -9,8 +9,6 @@ namespace PlayniteLibraryExporter
     /// <summary>Link state persisted in the plugin's data folder.</summary>
     public class WebLinkState
     {
-        /// <summary>Server the token belongs to; a token is ignored if the configured server changes.</summary>
-        public string ServerUrl { get; set; }
         /// <summary>Device token, encrypted for the current Windows user (DPAPI), base64.</summary>
         public string ProtectedToken { get; set; }
         public string Handle { get; set; }
@@ -41,13 +39,12 @@ namespace PlayniteLibraryExporter
             get { lock (sync) return Serialization.GetClone(state); }
         }
 
-        /// <summary>Device token for the given server, or null when this PC is not linked to it.</summary>
-        public string GetToken(string serverUrl)
+        /// <summary>Device token, or null when this PC is not linked.</summary>
+        public string GetToken()
         {
             lock (sync)
             {
-                if (string.IsNullOrEmpty(state.ProtectedToken) ||
-                    !string.Equals(state.ServerUrl, WebConfig.NormalizeServerUrl(serverUrl), StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrEmpty(state.ProtectedToken))
                 {
                     return null;
                 }
@@ -64,12 +61,11 @@ namespace PlayniteLibraryExporter
             }
         }
 
-        public void SaveLink(string serverUrl, string token, string handle, string libraryUrl)
+        public void SaveLink(string token, string handle, string libraryUrl)
         {
             var bytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(token), Entropy, DataProtectionScope.CurrentUser);
             Update(s =>
             {
-                s.ServerUrl = WebConfig.NormalizeServerUrl(serverUrl);
                 s.ProtectedToken = Convert.ToBase64String(bytes);
                 s.Handle = handle;
                 s.LibraryUrl = libraryUrl;

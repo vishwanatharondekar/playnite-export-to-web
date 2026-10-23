@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedAtUtc": "2026-06-05T00:00:00Z",
   "generator": {
-    "name": "Playnite Library Exporter",
+    "name": "Playnite Library Web",
     "version": "1.0.0.0"
   },
   "playnite": {
@@ -13,10 +13,6 @@
     "databaseGameCount": 2,
     "excludedGameCount": 0,
     "steamAppIdCount": 1,
-    "formats": [
-      "json",
-      "csv"
-    ],
     "automatic": false,
     "trigger": "manual"
   },
@@ -35,7 +31,6 @@
       "isInstalled": true,
       "hidden": false,
       "favorite": false,
-      "installDirectory": "C:\\Games\\Example Steam Game",
       "platforms": [
         "PC"
       ],
@@ -66,7 +61,6 @@
       "isInstalled": false,
       "hidden": false,
       "favorite": true,
-      "installDirectory": null,
       "platforms": [
         "PC"
       ],

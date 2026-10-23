@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Playnite Library Web")]
-[assembly: AssemblyDescription("Publishes the Playnite game library as a web page and exports it to JSON, plain text, Markdown, and CSV.")]
+[assembly: AssemblyDescription("Publishes the Playnite game library as a web page that stays up to date.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Vishwanath Arondekar")]
 [assembly: AssemblyProduct("Playnite Library Web")]

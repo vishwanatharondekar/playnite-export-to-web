@@ -70,12 +70,7 @@ namespace PlayniteLibraryExporter
     public class WebApiClient
     {
         private static readonly HttpClient http = CreateHttpClient();
-        private readonly string serverUrl;
-
-        public WebApiClient(string serverUrl)
-        {
-            this.serverUrl = WebConfig.NormalizeServerUrl(serverUrl);
-        }
+        private readonly string serverUrl = WebConfig.ServerUrl.TrimEnd('/');
 
         private static HttpClient CreateHttpClient()
         {

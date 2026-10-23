@@ -56,17 +56,7 @@ namespace PlayniteLibraryExporter
         public WebLinkState State => store.State;
         public bool IsLinked => Phase == WebLinkPhase.Linked;
 
-        private string ServerUrl => WebConfig.NormalizeServerUrl(getSettings().ServerUrl);
-        private string CurrentToken() => store.GetToken(ServerUrl);
-
-        /// <summary>Re-reads the link after the server URL setting changed.</summary>
-        public void RefreshPhase()
-        {
-            if (Phase != WebLinkPhase.Linking)
-            {
-                SetPhase(CurrentToken() == null ? WebLinkPhase.NotLinked : WebLinkPhase.Linked);
-            }
-        }
+        private string CurrentToken() => store.GetToken();
 
         // ---------- Linking ----------
 
@@ -78,7 +68,7 @@ namespace PlayniteLibraryExporter
         {
             CancelLink();
             var settings = getSettings();
-            var client = new WebApiClient(ServerUrl);
+            var client = new WebApiClient();
             var deviceName = string.IsNullOrWhiteSpace(settings.DeviceName) ? Environment.MachineName : settings.DeviceName.Trim();
 
             LastError = null;
@@ -118,7 +108,7 @@ namespace PlayniteLibraryExporter
                         continue;
                     }
 
-                    store.SaveLink(ServerUrl, result.deviceToken, result.handle, result.url);
+                    store.SaveLink(result.deviceToken, result.handle, result.url);
                     LinkCode = null;
                     SetPhase(WebLinkPhase.Linked);
                     logger.Info($"Linked to web library {result.url}");
@@ -163,7 +153,7 @@ namespace PlayniteLibraryExporter
             {
                 try
                 {
-                    await new WebApiClient(ServerUrl).UnlinkAsync(token);
+                    await new WebApiClient().UnlinkAsync(token);
                 }
                 catch (Exception ex)
                 {
@@ -256,11 +246,19 @@ namespace PlayniteLibraryExporter
                     return true;
                 }
 
-                var response = await new WebApiClient(ServerUrl).UploadExportAsync(token, payload.Json);
+                var client = new WebApiClient();
+                var response = await client.UploadExportAsync(token, payload.Json);
+                // Picks up handle renames on the website and a new domain after the server moves
+                var me = force ? await TryGetMeAsync(client, token) : null;
                 store.Update(s =>
                 {
                     s.LastUploadUtc = DateTime.UtcNow;
                     s.LastUploadedHash = payload.Hash;
+                    if (me != null)
+                    {
+                        s.Handle = me.handle;
+                        s.LibraryUrl = me.url;
+                    }
                 });
                 LastError = null;
                 api.Notifications.Remove(ErrorNotificationId);
@@ -296,6 +294,19 @@ namespace PlayniteLibraryExporter
             }
         }
 
+        private async Task<MeResponse> TryGetMeAsync(WebApiClient client, string token)
+        {
+            try
+            {
+                return await client.GetMeAsync(token);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn($"Could not refresh the web library link: {ex.Message}");
+                return null;
+            }
+        }
+
         private void ReportError(string message)
         {
             LastError = message;
@@ -326,15 +337,13 @@ namespace PlayniteLibraryExporter
         private UploadPayload Capture(string trigger)
         {
             var settings = getSettings();
-            // Uploads always carry every field the site uses, never install folders
-            var mapper = new GameExportMapper(includeOnlyCoreFields: false, includeLocalInstallPaths: false);
             var databaseGames = api.Database.Games.ToList();
             var included = databaseGames
                 .Where(game => settings.IncludeHiddenGames || !game.Hidden)
                 .Where(game => !settings.ExcludeVisualNovelTag || !GameExportMapper.HasVisualNovelMetadata(game))
                 .ToList();
             var games = included
-                .Select(game => mapper.Map(game))
+                .Select(game => GameExportMapper.Map(game))
                 .OrderBy(game => string.IsNullOrWhiteSpace(game.sortingName) ? game.name : game.sortingName, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(game => game.name, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(game => game.playniteId, StringComparer.OrdinalIgnoreCase)
@@ -356,7 +365,6 @@ namespace PlayniteLibraryExporter
                     databaseGameCount = databaseGames.Count,
                     excludedGameCount = databaseGames.Count - included.Count,
                     steamAppIdCount = games.Count(game => game.steamAppId.HasValue),
-                    formats = new System.Collections.Generic.List<string> { "web" },
                     automatic = trigger != "manual",
                     trigger = trigger
                 },
@@ -392,7 +400,7 @@ namespace PlayniteLibraryExporter
 
         public void OpenAccountPage()
         {
-            OpenUrl(ServerUrl + "/account");
+            OpenUrl(WebConfig.ServerUrl.TrimEnd('/') + "/account");
         }
 
         private void OpenUrl(string url)

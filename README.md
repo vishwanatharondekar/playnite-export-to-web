@@ -2,7 +2,7 @@
 
 A [Playnite](https://playnite.link/) extension that publishes your game library as a web page that stays up to date: browse, filter and sort by store, genre, tags and play stats, on any device, and share the link.
 
-Based on [Playnite Library Exporter](https://github.com/Dawnflare/PlayniteLibraryExport) by Dawnflare (MIT), and still includes its local JSON, plain text, Markdown and CSV exports.
+Based on [Playnite Library Exporter](https://github.com/Dawnflare/PlayniteLibraryExport) by Dawnflare (MIT). Use that extension if you want local JSON, text, Markdown or CSV files instead.
 
 The website lives in a separate repository ([playnite-library](https://github.com/vishwanatharondekar/playnite-library)).
 
@@ -35,18 +35,16 @@ Bursts of changes upload once, and unchanged libraries are not re-sent. `Upload 
 
 The link is stored per Windows user in the extension's data folder, encrypted with Windows DPAPI. `Unlink this PC` revokes it on the server too.
 
-## Configuration
+## Settings
 
 | Setting | Default |
 | --- | --- |
 | Upload automatically | On |
 | Include hidden games | Off |
 | PC name (shown on the website) | The Windows computer name |
-| Server | `https://playnite-library.vercel.app` |
+| Exclude games with tag/genre "visual novel" | Off |
 
-The default server is `WebConfig.DefaultServerUrl` in [`WebConfig.cs`](PlayniteLibraryExporter/WebConfig.cs); change it there when the site moves to its own domain. Users can also override it in settings (linking again is required after a change).
-
-The local file export settings (formats, folder, automatic export after library updates, notifications) work as in Playnite Library Exporter; exports go to `%USERPROFILE%\Documents\PlayniteLibraryExport` by default.
+The server is fixed at build time: `WebConfig.ServerUrl` in [`WebConfig.cs`](PlayniteLibraryExporter/WebConfig.cs). Change it there when the site moves to its own domain and release a new version; linked PCs keep working, since their tokens belong to the account rather than the domain.
 
 ## Install
 
@@ -90,10 +88,10 @@ https://raw.githubusercontent.com/vishwanatharondekar/PlayniteLibraryWeb/main/in
 ## Troubleshooting
 
 - **Linking says the code expired:** codes last 10 minutes. Start again from the settings.
-- **"This PC was unlinked":** the PC was unlinked from the website, or the server changed. Link again.
+- **"This PC was unlinked":** the PC was unlinked from the website. Link again.
 - **Uploads fail:** check `Extensions -> Playnite Library Web` errors in Playnite's notifications and `extensions.log` in the Playnite folder.
 - **Plugin does not appear:** confirm `extension.yaml` and `PlayniteLibraryWeb.dll` are directly inside the extension folder.
 
 ## Examples
 
-See `examples\playnite-library.example.json` and `examples\playnite-library.example.csv` for the file export format.
+See `examples\playnite-library.example.json` for the upload format.

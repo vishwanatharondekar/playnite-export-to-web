@@ -43,74 +43,14 @@
             <CheckBox Content="Include hidden games"
                       IsChecked="{Binding Settings.IncludeHiddenGames}"
                       Margin="0,0,0,6"/>
-            <TextBlock Text="Uploads contain game names, playtime, last played dates, tags, genres and store IDs. Install folders are never uploaded. Games excluded by the visual novel filter below are not uploaded either."
+            <TextBlock Text="Uploads contain game names, playtime, last played dates, tags, genres and store IDs. Install folders are never uploaded. Games excluded by the filter below are not uploaded either."
                        TextWrapping="Wrap" Opacity="0.7" Margin="0,0,0,8"/>
             <TextBlock Text="PC name (shown on the website)" Margin="0,0,0,4"/>
-            <TextBox Text="{Binding Settings.DeviceName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"/>
-            <TextBlock Text="Server" Margin="0,0,0,4"/>
-            <TextBox Text="{Binding Settings.ServerUrl, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
-            <TextBlock Text="Only change this if you run your own copy of the site. Changing it requires linking again."
-                       TextWrapping="Wrap" Opacity="0.7" Margin="0,0,0,16"/>
-
-            <TextBlock Text="Automatic file export" FontWeight="SemiBold" Margin="0,0,0,8"/>
-            <CheckBox Content="Export after Playnite finishes updating libraries"
-                      IsChecked="{Binding Settings.EnableAutomaticExportAfterLibraryUpdate}"
-                      Margin="0,0,0,6"/>
-            <CheckBox Content="Export once on startup if output file is missing"
-                      IsChecked="{Binding Settings.ExportOnceOnStartupIfFileIsMissing}"
-                      Margin="0,0,0,6"/>
-            <CheckBox Content="Export on every Playnite startup"
-                      IsChecked="{Binding Settings.ExportOnEveryPlayniteStartup}"
-                      Margin="0,0,0,16"/>
-
-            <TextBlock Text="Output formats" FontWeight="SemiBold" Margin="0,0,0,8"/>
-            <CheckBox Content="JSON (.json)"
-                      IsChecked="{Binding Settings.OutputJson}"
-                      Margin="0,0,0,6"/>
-            <CheckBox Content="Plain text (.txt)"
-                      IsChecked="{Binding Settings.OutputText}"
-                      Margin="0,0,0,6"/>
-            <CheckBox Content="Markdown (.md)"
-                      IsChecked="{Binding Settings.OutputMarkdown}"
-                      Margin="0,0,0,6"/>
-            <CheckBox Content="Spreadsheet CSV (.csv)"
-                      IsChecked="{Binding Settings.OutputCsv}"
-                      Margin="0,0,0,16"/>
+            <TextBox Text="{Binding Settings.DeviceName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,16"/>
 
             <TextBlock Text="Filtering" FontWeight="SemiBold" Margin="0,0,0,8"/>
             <CheckBox Content="Exclude games with tag or genre &quot;visual novel&quot;"
                       IsChecked="{Binding Settings.ExcludeVisualNovelTag}"
-                      Margin="0,0,0,16"/>
-
-            <TextBlock Text="Output location" FontWeight="SemiBold" Margin="0,0,0,8"/>
-            <TextBlock Text="Directory" Margin="0,0,0,4"/>
-            <DockPanel Margin="0,0,0,8">
-                <Button Content="Browse..." Command="{Binding SelectOutputDirectoryCommand}" DockPanel.Dock="Right" Margin="8,0,0,0" MinWidth="86"/>
-                <TextBox Text="{Binding Settings.OutputDirectory, UpdateSourceTrigger=PropertyChanged}"/>
-            </DockPanel>
-            <TextBlock Text="File base name" Margin="0,0,0,4"/>
-            <TextBox Text="{Binding Settings.OutputFileBaseName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,16"/>
-
-            <TextBlock Text="Format options" FontWeight="SemiBold" Margin="0,0,0,8"/>
-            <CheckBox Content="Pretty-print JSON"
-                      IsChecked="{Binding Settings.PrettyPrintJson}"
-                      Margin="0,0,0,6"/>
-            <CheckBox Content="Include JSON metadata envelope"
-                      IsChecked="{Binding Settings.IncludeExportMetadataEnvelope}"
-                      Margin="0,0,0,6"/>
-            <CheckBox Content="Include only core fields"
-                      IsChecked="{Binding Settings.IncludeOnlyCoreFields}"
-                      Margin="0,0,0,6"/>
-            <CheckBox Content="Include local install paths"
-                      IsChecked="{Binding Settings.IncludeLocalInstallPaths}"
-                      Margin="0,0,0,16"/>
-
-            <TextBlock Text="Notifications" FontWeight="SemiBold" Margin="0,0,0,8"/>
-            <CheckBox Content="Show notification after automatic export"
-                      IsChecked="{Binding Settings.ShowNotificationAfterAutomaticExport}"
-                      Margin="0,0,0,6"/>
-            <CheckBox Content="Show notification after manual export"
-                      IsChecked="{Binding Settings.ShowNotificationAfterManualExport}"
                       Margin="0,0,0,6"/>
         </StackPanel>
     </ScrollViewer>

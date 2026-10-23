@@ -6,54 +6,39 @@ using System.Linq;
 
 namespace PlayniteLibraryExporter
 {
-    public class GameExportMapper
+    /// <summary>Maps a Playnite game to the upload format. Install folders are never included.</summary>
+    public static class GameExportMapper
     {
-        private readonly bool includeOnlyCoreFields;
-        private readonly bool includeLocalInstallPaths;
-
-        public GameExportMapper(bool includeOnlyCoreFields, bool includeLocalInstallPaths)
-        {
-            this.includeOnlyCoreFields = includeOnlyCoreFields;
-            this.includeLocalInstallPaths = includeLocalInstallPaths;
-        }
-
-        public GameExportDto Map(Game game)
+        public static GameExportDto Map(Game game)
         {
             var sourceName = game.Source?.Name;
             var steamAppId = InferSteamAppId(sourceName, game.GameId);
 
-            var dto = new GameExportDto
+            return new GameExportDto
             {
                 playniteId = game.Id.ToString(),
                 name = game.Name,
-                sortingName = string.IsNullOrWhiteSpace(game.SortingName) ? null : game.SortingName,
-                providerGameId = string.IsNullOrWhiteSpace(game.GameId) ? null : game.GameId,
+                sortingName = NullIfWhiteSpace(game.SortingName),
+                providerGameId = NullIfWhiteSpace(game.GameId),
                 pluginId = game.PluginId.ToString(),
                 sourceId = game.SourceId.ToString(),
                 sourceName = sourceName,
                 steamAppId = steamAppId,
                 steamAppIdSource = steamAppId.HasValue ? "playnite-provider-game-id" : null,
                 steamAppIdConfidence = steamAppId.HasValue ? "exact" : "none",
-                tags = Names(game.Tags)
+                isInstalled = game.IsInstalled,
+                hidden = game.Hidden,
+                favorite = game.Favorite,
+                platforms = Names(game.Platforms),
+                genres = Names(game.Genres),
+                categories = Names(game.Categories),
+                tags = Names(game.Tags),
+                lastActivity = FormatDateTime(game.LastActivity),
+                playtimeSeconds = Convert.ToInt64(game.Playtime),
+                added = FormatDateTime(game.Added),
+                modified = FormatDateTime(game.Modified),
+                releaseDate = game.ReleaseDate?.Serialize()
             };
-
-            if (!includeOnlyCoreFields)
-            {
-                dto.isInstalled = game.IsInstalled;
-                dto.hidden = game.Hidden;
-                dto.favorite = game.Favorite;
-                dto.installDirectory = includeLocalInstallPaths ? NullIfWhiteSpace(game.InstallDirectory) : null;
-                dto.platforms = Names(game.Platforms);
-                dto.genres = Names(game.Genres);
-                dto.categories = Names(game.Categories);
-                dto.lastActivity = FormatDateTime(game.LastActivity);
-                dto.playtimeSeconds = Convert.ToInt64(game.Playtime);
-                dto.added = FormatDateTime(game.Added);
-                dto.modified = FormatDateTime(game.Modified);
-                dto.releaseDate = game.ReleaseDate?.Serialize();
-            }
-
-            return dto;
         }
 
         public static bool HasVisualNovelMetadata(Game game)
@@ -61,6 +46,7 @@ namespace PlayniteLibraryExporter
             return HasVisualNovelName(game.Tags) || HasVisualNovelName(game.Genres);
         }
 
+        /// <summary>Only for Steam games, whose provider game id is the Steam App ID.</summary>
         private static int? InferSteamAppId(string sourceName, string providerGameId)
         {
             if (!string.Equals(sourceName?.Trim(), "Steam", StringComparison.OrdinalIgnoreCase))
