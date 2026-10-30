@@ -44,7 +44,7 @@ The link is stored per Windows user in the extension's data folder, encrypted wi
 | PC name (shown on the website) | The Windows computer name |
 | Exclude games with tag/genre "visual novel" | Off |
 
-The server is fixed at build time: `WebConfig.ServerUrl` in [`WebConfig.cs`](PlayniteLibraryExporter/WebConfig.cs). Change it there when the site moves to its own domain and release a new version; linked PCs keep working, since their tokens belong to the account rather than the domain.
+The server is fixed at build time: `WebConfig.ServerUrl` in [`WebConfig.cs`](PlayniteLibraryExporter/WebConfig.cs). It points at https://www.myplaynitelibrary.com; if the site moves again, change it there and release a new version. Linked PCs keep working, since their tokens belong to the account rather than the domain.
 
 ## Install
 
@@ -97,3 +97,8 @@ https://raw.githubusercontent.com/vishwanatharondekar/PlayniteLibraryWeb/main/in
 ## Examples
 
 See `examples\playnite-library.example.json` for the upload format.
+
+## Playnite add-on browser
+
+[`addon-database/`](addon-database) holds the manifest for Playnite's add-on database. Submissions are on hold
+until the new add-on portal opens (planned for the end of 2026); submit it then.

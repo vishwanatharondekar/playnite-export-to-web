@@ -7,7 +7,7 @@ namespace PlayniteLibraryExporter
         /// The web library server. Change this when the site moves to its own domain; existing links keep
         /// working because device tokens belong to the account, not to the domain.
         /// </summary>
-        public const string ServerUrl = "https://playnite-library.vercel.app";
+        public const string ServerUrl = "https://www.myplaynitelibrary.com";
 
         public const string PluginName = "Playnite Library Web";
 
