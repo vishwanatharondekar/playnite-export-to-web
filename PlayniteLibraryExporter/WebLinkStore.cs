@@ -13,6 +13,8 @@ namespace PlayniteLibraryExporter
         public string ProtectedToken { get; set; }
         public string Handle { get; set; }
         public string LibraryUrl { get; set; }
+        /// <summary>"public", "unlisted" or "private", as last reported by the website.</summary>
+        public string Visibility { get; set; }
         public DateTime? LastUploadUtc { get; set; }
         public string LastUploadedHash { get; set; }
     }
@@ -61,7 +63,7 @@ namespace PlayniteLibraryExporter
             }
         }
 
-        public void SaveLink(string token, string handle, string libraryUrl)
+        public void SaveLink(string token, string handle, string libraryUrl, string visibility)
         {
             var bytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(token), Entropy, DataProtectionScope.CurrentUser);
             Update(s =>
@@ -69,6 +71,7 @@ namespace PlayniteLibraryExporter
                 s.ProtectedToken = Convert.ToBase64String(bytes);
                 s.Handle = handle;
                 s.LibraryUrl = libraryUrl;
+                s.Visibility = visibility;
                 s.LastUploadUtc = null;
                 s.LastUploadedHash = null;
             });
@@ -81,6 +84,7 @@ namespace PlayniteLibraryExporter
                 s.ProtectedToken = null;
                 s.Handle = null;
                 s.LibraryUrl = null;
+                s.Visibility = null;
                 s.LastUploadUtc = null;
                 s.LastUploadedHash = null;
             });

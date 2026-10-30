@@ -99,6 +99,9 @@ namespace PlayniteLibraryExporter
         public bool IsWebNotLinked => web == null || web.Phase == WebLinkPhase.NotLinked;
         public string WebLinkCode => web?.LinkCode;
         public string WebLibraryUrl => web?.State.LibraryUrl;
+        public bool IsWebPrivate => web?.State.Visibility == "private";
+        /// <summary>A private library's link only works for its owner, so there is nothing to share.</summary>
+        public bool CanCopyLink => IsWebLinked && !IsWebPrivate;
         public string WebError => web?.LastError;
         public bool HasWebError => !string.IsNullOrEmpty(WebError);
 
@@ -120,7 +123,8 @@ namespace PlayniteLibraryExporter
                         var last = state.LastUploadUtc.HasValue
                             ? "Last upload: " + state.LastUploadUtc.Value.ToLocalTime().ToString("g")
                             : "Not uploaded yet.";
-                        return $"Linked as {state.Handle}. {last}";
+                        var privacy = IsWebPrivate ? " Your library is private: only you can see it, signed in." : string.Empty;
+                        return $"Linked as {state.Handle}.{privacy} {last}";
                     default:
                         return "Not linked. Link this PC to publish your library as a web page that stays up to date.";
                 }
@@ -134,7 +138,8 @@ namespace PlayniteLibraryExporter
                 foreach (var name in new[]
                 {
                     nameof(IsWebLinked), nameof(IsWebLinking), nameof(IsWebNotLinked), nameof(WebLinkCode),
-                    nameof(WebLibraryUrl), nameof(WebError), nameof(HasWebError), nameof(WebStatusText)
+                    nameof(WebLibraryUrl), nameof(WebError), nameof(HasWebError), nameof(WebStatusText),
+                    nameof(IsWebPrivate), nameof(CanCopyLink)
                 })
                 {
                     OnPropertyChanged(name);

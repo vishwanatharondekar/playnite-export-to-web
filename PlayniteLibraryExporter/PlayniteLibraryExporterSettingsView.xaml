@@ -28,7 +28,7 @@
                 <Button Content="Open library" Command="{Binding OpenLibraryCommand}" Margin="0,0,8,4" MinWidth="86"
                         Visibility="{Binding IsWebLinked, Converter={StaticResource Visible}}"/>
                 <Button Content="Copy link" Command="{Binding CopyLibraryLinkCommand}" Margin="0,0,8,4" MinWidth="86"
-                        Visibility="{Binding IsWebLinked, Converter={StaticResource Visible}}"/>
+                        Visibility="{Binding CanCopyLink, Converter={StaticResource Visible}}"/>
                 <Button Content="Upload now" Command="{Binding UploadNowCommand}" Margin="0,0,8,4" MinWidth="86"
                         Visibility="{Binding IsWebLinked, Converter={StaticResource Visible}}"/>
                 <Button Content="Manage on website" Command="{Binding OpenAccountCommand}" Margin="0,0,8,4" MinWidth="86"

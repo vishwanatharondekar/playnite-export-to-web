@@ -44,12 +44,15 @@ namespace PlayniteLibraryExporter
         public string deviceToken { get; set; }
         public string handle { get; set; }
         public string url { get; set; }
+        public string visibility { get; set; }
     }
 
     public class MeResponse
     {
         public string handle { get; set; }
         public string url { get; set; }
+        /// <summary>"public", "unlisted" or "private"; null from servers before visibility existed.</summary>
+        public string visibility { get; set; }
         public string exportedAt { get; set; }
         public int gameCount { get; set; }
     }

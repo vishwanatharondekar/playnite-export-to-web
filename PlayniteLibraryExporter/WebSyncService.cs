@@ -108,7 +108,7 @@ namespace PlayniteLibraryExporter
                         continue;
                     }
 
-                    store.SaveLink(result.deviceToken, result.handle, result.url);
+                    store.SaveLink(result.deviceToken, result.handle, result.url, result.visibility);
                     LinkCode = null;
                     SetPhase(WebLinkPhase.Linked);
                     logger.Info($"Linked to web library {result.url}");
@@ -258,6 +258,7 @@ namespace PlayniteLibraryExporter
                     {
                         s.Handle = me.handle;
                         s.LibraryUrl = me.url;
+                        s.Visibility = me.visibility;
                     }
                 });
                 LastError = null;
