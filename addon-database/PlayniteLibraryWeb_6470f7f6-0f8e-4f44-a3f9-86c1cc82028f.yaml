@@ -2,23 +2,23 @@
 # to submit as addons/generic/<this file name> once submissions reopen.
 AddonId: PlayniteLibraryWeb_6470f7f6-0f8e-4f44-a3f9-86c1cc82028f
 Type: Generic
-Name: Playnite Library Web
+Name: Export Library to Web
 Author: Vishwanath Arondekar
 ShortDescription: Publishes your library as a web page that stays up to date, to browse on any device and share with a link.
 Description: |
-  Playnite Library Web uploads your library to myplaynitelibrary.com and keeps it up to date: on startup,
+  Export Library to Web uploads your library to My Playnite Library (myplaynitelibrary.com) and keeps it up to date: on startup,
   after library updates, after you finish playing and after you edit games.
 
   Your library page works on phones and desktops. Filter and sort by store, genre, tag, category, platform,
   playtime, last played and release year, see play stats, and open any game for its details. Cover art comes
   from Steam, including for games you own on other stores.
 
-  Setup: install the add-on, open Extensions > Playnite Library Web > Link web library account, sign in on
+  Setup: install the add-on, open Extensions > Export Library to Web > Link web library account, sign in on
   the website and pick your address. Libraries are public to anyone with the link and hidden from search
   engines unless you allow them. Hidden games and install folders are never uploaded by default.
-SourceUrl: https://github.com/vishwanatharondekar/PlayniteLibraryWeb
-InstallerManifestUrl: https://raw.githubusercontent.com/vishwanatharondekar/PlayniteLibraryWeb/main/installer.yaml
-IconUrl: https://raw.githubusercontent.com/vishwanatharondekar/PlayniteLibraryWeb/main/PlayniteLibraryExporter/icon.png
+SourceUrl: https://github.com/vishwanatharondekar/playnite-export-to-web
+InstallerManifestUrl: https://raw.githubusercontent.com/vishwanatharondekar/playnite-export-to-web/main/installer.yaml
+IconUrl: https://raw.githubusercontent.com/vishwanatharondekar/playnite-export-to-web/main/PlayniteLibraryExporter/icon.png
 Tags:
   - web
   - sharing

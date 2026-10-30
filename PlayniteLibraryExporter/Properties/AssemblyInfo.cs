@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Playnite Library Web")]
+[assembly: AssemblyTitle("Export Library to Web")]
 [assembly: AssemblyDescription("Publishes the Playnite game library as a web page that stays up to date.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Vishwanath Arondekar")]
-[assembly: AssemblyProduct("Playnite Library Web")]
+[assembly: AssemblyProduct("Export Library to Web")]
 [assembly: AssemblyCopyright("Copyright © 2026 Dawnflare, Vishwanath Arondekar")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

@@ -9,7 +9,7 @@ namespace PlayniteLibraryExporter
         /// </summary>
         public const string ServerUrl = "https://www.myplaynitelibrary.com";
 
-        public const string PluginName = "Playnite Library Web";
+        public const string PluginName = "Export Library to Web";
 
         /// <summary>Delay before uploading after Playnite reports a change, so bursts of edits upload once.</summary>
         public const int LibraryUpdatedDelayMs = 5000;

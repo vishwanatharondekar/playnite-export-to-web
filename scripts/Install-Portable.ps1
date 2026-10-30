@@ -15,5 +15,5 @@ if (-not (Test-Path -LiteralPath $source)) {
 New-Item -ItemType Directory -Force -Path $destination | Out-Null
 Copy-Item -Path (Join-Path $source "*") -Destination $destination -Recurse -Force
 
-Write-Host "Installed Playnite Library Web to:"
+Write-Host "Installed Export Library to Web to:"
 Write-Host $destination

@@ -1,15 +1,15 @@
-# Playnite Library Web
+# Export Library to Web
 
 A [Playnite](https://playnite.link/) extension that publishes your game library as a web page that stays up to date: browse, filter and sort by store, genre, tags and play stats, on any device, and share the link.
 
 Based on [Playnite Library Exporter](https://github.com/Dawnflare/PlayniteLibraryExport) by Dawnflare (MIT). Use that extension if you want local JSON, text, Markdown or CSV files instead.
 
-The website lives in a separate repository ([playnite-library](https://github.com/vishwanatharondekar/playnite-library)).
+It uploads to [My Playnite Library](https://www.myplaynitelibrary.com), whose code lives in a separate repository ([playnite-library](https://github.com/vishwanatharondekar/playnite-library)).
 
 ## Getting started
 
 1. Install the extension (see [Install](#install)) and restart Playnite.
-2. Open `Extensions -> Playnite Library Web -> Link web library account...`, or click **Link account...** in the extension's settings.
+2. Open `Extensions -> Export Library to Web -> Link web library account...`, or click **Link account...** in the extension's settings.
 3. A browser window opens. Sign in, choose your handle the first time, check the code matches the one Playnite shows, and click **Link**.
 4. Your library uploads within a few seconds and is public at `https://<server>/u/<handle>`.
 
@@ -48,14 +48,14 @@ The server is fixed at build time: `WebConfig.ServerUrl` in [`WebConfig.cs`](Pla
 
 ## Install
 
-Download the `.pext` from the [latest release](https://github.com/vishwanatharondekar/PlayniteLibraryWeb/releases/latest), close Playnite, and double-click it.
+Download the `.pext` from the [latest release](https://github.com/vishwanatharondekar/playnite-export-to-web/releases/latest), close Playnite, and double-click it.
 
 To install a build of your own instead, either:
 
 - Pack it with `Toolbox.exe pack` and double-click the `.pext` file, or
 - Copy `PlayniteLibraryExporter\bin\Release\*` into `%AppData%\Playnite\Extensions\PlayniteLibraryWeb_6470f7f6-0f8e-4f44-a3f9-86c1cc82028f` (for a portable Playnite, `Playnite\Extensions\…` next to `Playnite.DesktopApp.exe`), so that `extension.yaml` and `PlayniteLibraryWeb.dll` sit directly inside that folder.
 
-Playnite Library Web has its own add-on id, so it can be installed next to Playnite Library Exporter.
+Export Library to Web has its own add-on id, so it can be installed next to Playnite Library Exporter.
 
 ## Developer build
 
@@ -84,14 +84,14 @@ Pull requests and manual runs only build and upload the `.pext` as a workflow ar
 `installer.yaml` is the manifest for Playnite's add-on update system; register this URL in the Playnite add-on database:
 
 ```text
-https://raw.githubusercontent.com/vishwanatharondekar/PlayniteLibraryWeb/main/installer.yaml
+https://raw.githubusercontent.com/vishwanatharondekar/playnite-export-to-web/main/installer.yaml
 ```
 
 ## Troubleshooting
 
 - **Linking says the code expired:** codes last 10 minutes. Start again from the settings.
 - **"This PC was unlinked":** the PC was unlinked from the website. Link again.
-- **Uploads fail:** check `Extensions -> Playnite Library Web` errors in Playnite's notifications and `extensions.log` in the Playnite folder.
+- **Uploads fail:** check `Extensions -> Export Library to Web` errors in Playnite's notifications and `extensions.log` in the Playnite folder.
 - **Plugin does not appear:** confirm `extension.yaml` and `PlayniteLibraryWeb.dll` are directly inside the extension folder.
 
 ## Examples
