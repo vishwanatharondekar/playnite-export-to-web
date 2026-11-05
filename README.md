@@ -35,6 +35,17 @@ Bursts of changes upload once, and unchanged libraries are not re-sent. `Upload 
 
 The link is stored per Windows user in the extension's data folder, encrypted with Windows DPAPI. `Unlink this PC` revokes it on the server too.
 
+## Play next
+
+Mark a game **Play next** on your web library (from a game's page or the Play next tab, say on your phone) and it's waiting in Playnite when you sit down:
+
+- The game gets a `Play next` tag, and a `Play next` filter preset shows the marked games (also among full screen mode's quick filters). The preset is created once; delete it and it stays deleted.
+- If a newly marked game isn't installed, Playnite asks once whether to install it.
+- Launching a marked game takes it off the list: the tag is removed. A `Play next` tag you add by hand stays.
+- Unmarking a game on the website removes its tag.
+
+Marks arrive after the extension's next upload: on startup, after a game session or an edit. There is no polling; with automatic uploads off, it checks once on startup.
+
 ## Settings
 
 | Setting | Default |
@@ -43,6 +54,8 @@ The link is stored per Windows user in the extension's data folder, encrypted wi
 | Include hidden games | Off |
 | PC name (shown on the website) | The Windows computer name |
 | Exclude games with tag/genre "visual novel" | Off |
+| Get Play next marks from the web library | On |
+| Ask to install games marked to play next | On |
 
 The server is fixed at build time: `WebConfig.ServerUrl` in [`WebConfig.cs`](PlayniteLibraryExporter/WebConfig.cs). It points at https://www.myplaynitelibrary.com; if the site moves again, change it there and release a new version. Linked PCs keep working, since their tokens belong to the account rather than the domain.
 
