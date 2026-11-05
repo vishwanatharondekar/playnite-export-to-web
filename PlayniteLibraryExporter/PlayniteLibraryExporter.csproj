@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="ExportModels.cs" />
     <Compile Include="GameExportMapper.cs" />
+    <Compile Include="PlayNextService.cs" />
     <Compile Include="PlayniteLibraryExporter.cs" />
     <Compile Include="PlayniteLibraryExporterSettings.cs" />
     <Compile Include="PlayniteLibraryExporterSettingsView.xaml.cs">

@@ -1,5 +1,6 @@
 using Playnite.SDK.Data;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -63,6 +64,31 @@ namespace PlayniteLibraryExporter
         public int games { get; set; }
     }
 
+    /// <summary>A Play next mark or unmark made on the website, for this PC to apply.</summary>
+    public class PlayNextCommand
+    {
+        public long id { get; set; }
+        /// <summary>"mark" or "unmark".</summary>
+        public string action { get; set; }
+        /// <summary>The game's id in the Playnite database of the PC that uploaded last.</summary>
+        public string playniteId { get; set; }
+        /// <summary>With providerGameId, finds the game when this PC's Playnite id differs.</summary>
+        public string pluginId { get; set; }
+        public string providerGameId { get; set; }
+        public string name { get; set; }
+    }
+
+    public class PlayNextResponse
+    {
+        public List<PlayNextCommand> commands { get; set; }
+    }
+
+    public class PlayNextAckResponse
+    {
+        /// <summary>This PC's cursor after the acknowledgement; null when the library has no commands.</summary>
+        public long? cursor { get; set; }
+    }
+
     internal class ApiErrorBody
     {
         public string error { get; set; }
@@ -119,6 +145,18 @@ namespace PlayniteLibraryExporter
         public Task UnlinkAsync(string token)
         {
             return SendAsync<object>(HttpMethod.Delete, "/api/me/device", token, null);
+        }
+
+        /// <summary>Play next commands this PC hasn't applied yet, oldest first.</summary>
+        public Task<PlayNextResponse> GetPlayNextAsync(string token)
+        {
+            return SendAsync<PlayNextResponse>(HttpMethod.Get, "/api/me/play-next", token, null);
+        }
+
+        /// <summary>Tells the website this PC applied the Play next commands up to <paramref name="cursor"/> (the highest id).</summary>
+        public Task<PlayNextAckResponse> AckPlayNextAsync(string token, long cursor)
+        {
+            return SendAsync<PlayNextAckResponse>(HttpMethod.Post, "/api/me/play-next/ack", token, JsonContent(new { cursor }));
         }
 
         private async Task<T> SendAsync<T>(HttpMethod method, string path, string token, HttpContent content) where T : class

@@ -1,5 +1,6 @@
 using Playnite.SDK.Data;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -17,6 +18,10 @@ namespace PlayniteLibraryExporter
         public string Visibility { get; set; }
         public DateTime? LastUploadUtc { get; set; }
         public string LastUploadedHash { get; set; }
+        /// <summary>Games this extension tagged "Play next" from the website (launching one removes the tag). May be null.</summary>
+        public List<Guid> PlayNextTaggedFromWeb { get; set; }
+        /// <summary>The "Play next" filter preset was created once; a preset the user deletes isn't created again.</summary>
+        public bool PlayNextPresetCreated { get; set; }
     }
 
     /// <summary>
