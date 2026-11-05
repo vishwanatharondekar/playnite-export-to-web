@@ -48,6 +48,17 @@
             <TextBlock Text="PC name (shown on the website)" Margin="0,0,0,4"/>
             <TextBox Text="{Binding Settings.DeviceName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,16"/>
 
+            <TextBlock Text="Play next" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <CheckBox Content="Get Play next marks from the web library"
+                      IsChecked="{Binding Settings.ReceivePlayNext}"
+                      Margin="0,0,0,6"/>
+            <CheckBox Content="Ask to install games marked to play next"
+                      IsChecked="{Binding Settings.AskToInstallPlayNext}"
+                      IsEnabled="{Binding Settings.ReceivePlayNext}"
+                      Margin="0,0,0,6"/>
+            <TextBlock Text="Games you mark to play next on the website get the &quot;Play next&quot; tag here, and a &quot;Play next&quot; filter preset (also in full screen mode)."
+                       TextWrapping="Wrap" Opacity="0.7" Margin="0,0,0,16"/>
+
             <TextBlock Text="Filtering" FontWeight="SemiBold" Margin="0,0,0,8"/>
             <CheckBox Content="Exclude games with tag or genre &quot;visual novel&quot;"
                       IsChecked="{Binding Settings.ExcludeVisualNovelTag}"

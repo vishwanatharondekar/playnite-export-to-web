@@ -39,6 +39,12 @@ namespace PlayniteLibraryExporter
         /// <summary>Raised (on any thread) whenever the link or upload status changes.</summary>
         public event EventHandler StatusChanged;
 
+        /// <summary>
+        /// Raised (on any thread) after each upload request the website answered, changed or not, once the upload lock is
+        /// released. Not for uploads skipped as unchanged without a request, nor for failures.
+        /// </summary>
+        public event EventHandler UploadRequestCompleted;
+
         public WebLinkPhase Phase { get; private set; }
         /// <summary>Code to confirm in the browser while linking, e.g. "WDJB-MJHT".</summary>
         public string LinkCode { get; private set; }
@@ -237,6 +243,7 @@ namespace PlayniteLibraryExporter
             }
 
             await uploadLock.WaitAsync();
+            var answered = false;
             try
             {
                 var payload = await CaptureAsync(trigger);
@@ -248,6 +255,7 @@ namespace PlayniteLibraryExporter
 
                 var client = new WebApiClient();
                 var response = await client.UploadExportAsync(token, payload.Json);
+                answered = true;
                 // Picks up handle renames on the website and a new domain after the server moves
                 var me = force ? await TryGetMeAsync(client, token) : null;
                 store.Update(s =>
@@ -292,6 +300,11 @@ namespace PlayniteLibraryExporter
             finally
             {
                 uploadLock.Release();
+                if (answered)
+                {
+                    // Outside the lock: listeners (Play next) make requests of their own
+                    UploadRequestCompleted?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
