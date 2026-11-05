@@ -12,6 +12,8 @@ namespace PlayniteLibraryExporter
         private bool autoUpload = true;
         private bool includeHiddenGames;
         private bool excludeVisualNovelTag;
+        private bool receivePlayNext = true;
+        private bool askToInstallPlayNext = true;
 
         /// <summary>Name shown on the website's approval screen and in the list of linked PCs.</summary>
         public string DeviceName
@@ -37,6 +39,20 @@ namespace PlayniteLibraryExporter
         {
             get => excludeVisualNovelTag;
             set => SetValue(ref excludeVisualNovelTag, value);
+        }
+
+        /// <summary>Tag games marked to play next on the website (checked after uploads).</summary>
+        public bool ReceivePlayNext
+        {
+            get => receivePlayNext;
+            set => SetValue(ref receivePlayNext, value);
+        }
+
+        /// <summary>Offer to install newly marked games that aren't installed.</summary>
+        public bool AskToInstallPlayNext
+        {
+            get => askToInstallPlayNext;
+            set => SetValue(ref askToInstallPlayNext, value);
         }
 
         public void Normalize()

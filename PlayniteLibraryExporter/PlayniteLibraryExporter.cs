@@ -15,14 +15,20 @@ namespace PlayniteLibraryExporter
         private static readonly ILogger logger = LogManager.GetLogger();
 
         private readonly PlayniteLibraryExporterSettingsViewModel settingsViewModel;
+        private readonly WebLinkStore linkStore;
         private readonly WebSyncService webSync;
+        private readonly PlayNextService playNext;
 
         public override Guid Id { get; } = Guid.Parse("6470f7f6-0f8e-4f44-a3f9-86c1cc82028f");
 
         public PlayniteLibraryExporter(IPlayniteAPI api) : base(api)
         {
             settingsViewModel = new PlayniteLibraryExporterSettingsViewModel(this);
-            webSync = new WebSyncService(api, () => settingsViewModel.Settings, new WebLinkStore(GetPluginUserDataPath()), logger);
+            linkStore = new WebLinkStore(GetPluginUserDataPath());
+            webSync = new WebSyncService(api, () => settingsViewModel.Settings, linkStore, logger);
+            playNext = new PlayNextService(api, () => settingsViewModel.Settings, linkStore, logger);
+            // Marks are checked only after requests the extension makes anyway (startup, after playing, edits, linking)
+            webSync.UploadRequestCompleted += (_, __) => CheckPlayNext();
             settingsViewModel.AttachWeb(webSync);
             Properties = new GenericPluginProperties
             {
@@ -38,6 +44,25 @@ namespace PlayniteLibraryExporter
             PlayniteApi.Database.Games.ItemCollectionChanged += OnGamesAddedOrRemoved;
             // Forced: the server skips unchanged libraries, and this recovers from anything missed while closed
             webSync.ScheduleUpload("startup", WebConfig.LibraryUpdatedDelayMs, force: true);
+            // Play next marks follow the startup upload; without automatic uploads there is none, so check once here
+            if (webSync.IsLinked && !settingsViewModel.Settings.AutoUpload)
+            {
+                CheckPlayNext();
+            }
+        }
+
+        public override void OnGameStarted(OnGameStartedEventArgs args)
+        {
+            playNext.OnGameStarted(args.Game);
+        }
+
+        private void CheckPlayNext()
+        {
+            var token = linkStore.GetToken();
+            if (token != null && settingsViewModel.Settings.ReceivePlayNext)
+            {
+                _ = playNext.CheckAsync(token);
+            }
         }
 
         public override void OnApplicationStopped(OnApplicationStoppedEventArgs args)
