@@ -134,66 +134,75 @@ namespace PlayniteLibraryExporter
             var createdTag = false;
             var marked = false;
 
-            foreach (var command in commands)
+            try
             {
-                var game = FindGame(command);
-                if (game == null)
+                foreach (var command in commands)
                 {
-                    logger.Info($"Play next: skipped {command.action} of \"{command.name}\", which isn't in this PC's library.");
-                    continue;
-                }
-
-                if (command.action == "mark")
-                {
-                    marked = true;
-                    if (tag == null)
+                    var game = FindGame(command);
+                    if (game == null)
                     {
-                        tag = api.Database.Tags.Add(TagName);
-                        createdTag = true;
+                        logger.Info($"Play next: skipped {command.action} of \"{command.name}\", which isn't in this PC's library.");
+                        continue;
                     }
 
-                    if (game.TagIds != null && game.TagIds.Contains(tag.Id))
+                    if (command.action == "mark")
                     {
-                        continue; // already tagged, perhaps by hand: left as it is
-                    }
+                        marked = true;
+                        if (tag == null)
+                        {
+                            tag = api.Database.Tags.Add(TagName);
+                            createdTag = true;
+                        }
 
-                    game.TagIds = game.TagIds ?? new List<Guid>();
-                    game.TagIds.Add(tag.Id);
-                    api.Database.Games.Update(game);
-                    taggedFromWeb.Add(game.Id);
-                    if (!game.IsInstalled && !offeredBefore.Contains(game.Id) && toInstall.All(g => g.Id != game.Id))
-                    {
-                        toInstall.Add(game);
-                    }
+                        if (game.TagIds != null && game.TagIds.Contains(tag.Id))
+                        {
+                            continue; // already tagged, perhaps by hand: left as it is
+                        }
 
-                    logger.Info($"Play next: tagged \"{game.Name}\".");
-                }
-                else if (command.action == "unmark")
-                {
-                    if (tag != null && game.TagIds != null && game.TagIds.Remove(tag.Id))
-                    {
+                        game.TagIds = game.TagIds ?? new List<Guid>();
+                        game.TagIds.Add(tag.Id);
                         api.Database.Games.Update(game);
-                        logger.Info($"Play next: removed the tag from \"{game.Name}\".");
-                    }
+                        taggedFromWeb.Add(game.Id);
+                        if (!game.IsInstalled && !offeredBefore.Contains(game.Id) && toInstall.All(g => g.Id != game.Id))
+                        {
+                            toInstall.Add(game);
+                        }
 
-                    taggedFromWeb.Remove(game.Id);
-                    toInstall.RemoveAll(g => g.Id == game.Id);
+                        logger.Info($"Play next: tagged \"{game.Name}\".");
+                    }
+                    else if (command.action == "unmark")
+                    {
+                        if (tag != null && game.TagIds != null && game.TagIds.Remove(tag.Id))
+                        {
+                            api.Database.Games.Update(game);
+                            logger.Info($"Play next: removed the tag from \"{game.Name}\".");
+                        }
+
+                        taggedFromWeb.Remove(game.Id);
+                        toInstall.RemoveAll(g => g.Id == game.Id);
+                    }
+                }
+
+                if (marked)
+                {
+                    EnsurePreset(tag, createdTag);
                 }
             }
-
-            if (marked)
+            finally
             {
-                EnsurePreset(tag, createdTag);
+                // Saved even when a write fails partway: the games tagged so far stay known as tagged from the website, so
+                // redelivered marks don't take them for tags the user added by hand
+                store.Update(s => s.PlayNextTaggedFromWeb = taggedFromWeb.ToList());
             }
 
-            store.Update(s => s.PlayNextTaggedFromWeb = taggedFromWeb.ToList());
             return toInstall;
         }
 
         /// <summary>
         /// The first time a mark arrives, creates a "Play next" filter preset on the tag (shown in full screen mode's quick
         /// filters too), unless one exists. Never again after that, so a preset the user deleted stays deleted. When the
-        /// tag had to be created anew, an existing "Play next" preset is pointed at it.
+        /// tag has to be created again later, the preset made earlier is pointed at it; a "Play next" preset the user had
+        /// made themselves before the first mark is left alone.
         /// </summary>
         private void EnsurePreset(Tag tag, bool createdTag)
         {
@@ -210,7 +219,7 @@ namespace PlayniteLibraryExporter
                 });
                 logger.Info("Play next: created the \"Play next\" filter preset.");
             }
-            else if (preset != null && createdTag)
+            else if (preset != null && createdTag && createdBefore)
             {
                 preset.Settings = preset.Settings ?? new FilterPresetSettings();
                 preset.Settings.Tag = new IdItemFilterItemProperties(tag.Id);
