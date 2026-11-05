@@ -1,5 +1,14 @@
 AddonId: PlayniteLibraryWeb_6470f7f6-0f8e-4f44-a3f9-86c1cc82028f
 Packages:
+  - Version: 1.1.12
+    RequiredApiVersion: 6.16.0
+    ReleaseDate: 2026-11-05
+    PackageUrl: https://github.com/vishwanatharondekar/playnite-export-to-web/releases/download/v1.1.12/PlayniteLibraryWeb_6470f7f6-0f8e-4f44-a3f9-86c1cc82028f_1_1_12.pext
+    Changelog:
+      - 'fix(play-next): leave the user''s own preset alone; keep state on a failed write'
+      - 'chore(play-next): version 1.1, README'
+      - 'feat(play-next): check after uploads, first-launch removal, settings'
+      - 'feat(play-next): fetch, apply and acknowledge marks'
   - Version: 1.0.10
     RequiredApiVersion: 6.16.0
     ReleaseDate: 2026-10-30
