@@ -22,6 +22,8 @@ namespace PlayniteLibraryExporter
     public class PlayniteDto
     {
         public int databaseGameCount { get; set; }
+        /// <summary>Name of the completion status Playnite gives new games; null when unset or unreadable.</summary>
+        public string defaultCompletionStatus { get; set; }
     }
 
     public class ExportSummaryDto
@@ -58,5 +60,7 @@ namespace PlayniteLibraryExporter
         public string added { get; set; }
         public string modified { get; set; }
         public string releaseDate { get; set; }
+        /// <summary>Name of the game's completion status (Playing, Completed…); null when it has none.</summary>
+        public string completionStatus { get; set; }
     }
 }

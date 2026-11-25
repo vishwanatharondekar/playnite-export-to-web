@@ -28,7 +28,7 @@ Uploads happen automatically (unless turned off in settings):
 
 Bursts of changes upload once, and unchanged libraries are not re-sent. `Upload to web library now` uploads immediately.
 
-- **Uploaded:** each game's name, store and store ID, platforms, genres, tags, categories, playtime, last played, added/modified dates, release date and installed/favourite/hidden flags.
+- **Uploaded:** each game's name, store and store ID, platforms, genres, tags, categories, playtime, last played, added/modified dates, release date, installed/favourite/hidden flags and completion status, and the name of the status Playnite gives new games.
 - **Never uploaded:** install folders.
 - **Not uploaded by default:** hidden games (`Include hidden games` in settings).
 - **Not uploaded when the visual novel filter is on:** games with a tag or genre named `visual novel`.

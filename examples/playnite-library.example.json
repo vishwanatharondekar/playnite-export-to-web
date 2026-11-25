@@ -6,7 +6,8 @@
     "version": "1.0.0.0"
   },
   "playnite": {
-    "databaseGameCount": 2
+    "databaseGameCount": 2,
+    "defaultCompletionStatus": "Not Played"
   },
   "export": {
     "totalGames": 2,
@@ -45,7 +46,8 @@
       "playtimeSeconds": 3600,
       "added": "2026-06-05T00:00:00Z",
       "modified": "2026-06-05T00:00:00Z",
-      "releaseDate": "2024-01-01"
+      "releaseDate": "2024-01-01",
+      "completionStatus": "Completed"
     },
     {
       "playniteId": "00000000-0000-0000-0000-000000000002",
@@ -73,7 +75,8 @@
       "playtimeSeconds": 0,
       "added": "2026-06-05T00:00:00Z",
       "modified": "2026-06-05T00:00:00Z",
-      "releaseDate": "2023"
+      "releaseDate": "2023",
+      "completionStatus": null
     }
   ]
 }
