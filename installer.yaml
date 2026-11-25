@@ -1,5 +1,11 @@
 AddonId: PlayniteLibraryWeb_6470f7f6-0f8e-4f44-a3f9-86c1cc82028f
 Packages:
+  - Version: 1.2.14
+    RequiredApiVersion: 6.16.0
+    ReleaseDate: 2026-11-25
+    PackageUrl: https://github.com/vishwanatharondekar/playnite-export-to-web/releases/download/v1.2.14/PlayniteLibraryWeb_6470f7f6-0f8e-4f44-a3f9-86c1cc82028f_1_2_14.pext
+    Changelog:
+      - 'feat: send completion status and the default status (v1.2)'
   - Version: 1.1.12
     RequiredApiVersion: 6.16.0
     ReleaseDate: 2026-11-05
