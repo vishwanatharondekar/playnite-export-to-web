@@ -37,7 +37,8 @@ namespace PlayniteLibraryExporter
                 playtimeSeconds = Convert.ToInt64(game.Playtime),
                 added = FormatDateTime(game.Added),
                 modified = FormatDateTime(game.Modified),
-                releaseDate = game.ReleaseDate?.Serialize()
+                releaseDate = game.ReleaseDate?.Serialize(),
+                completionStatus = NullIfWhiteSpace(game.CompletionStatus?.Name)?.Trim()
             };
         }
 
@@ -77,7 +78,7 @@ namespace PlayniteLibraryExporter
                    values.Any(value => string.Equals(value?.Name?.Trim(), "visual novel", StringComparison.OrdinalIgnoreCase));
         }
 
-        private static string NullIfWhiteSpace(string value)
+        internal static string NullIfWhiteSpace(string value)
         {
             return string.IsNullOrWhiteSpace(value) ? null : value;
         }

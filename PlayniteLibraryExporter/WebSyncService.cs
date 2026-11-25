@@ -362,6 +362,7 @@ namespace PlayniteLibraryExporter
                 .ThenBy(game => game.name, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(game => game.playniteId, StringComparer.OrdinalIgnoreCase)
                 .ToList();
+            var defaultStatus = DefaultCompletionStatusName();
 
             var envelope = new ExportEnvelopeDto
             {
@@ -372,7 +373,7 @@ namespace PlayniteLibraryExporter
                     name = WebConfig.PluginName,
                     version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0"
                 },
-                playnite = new PlayniteDto { databaseGameCount = databaseGames.Count },
+                playnite = new PlayniteDto { databaseGameCount = databaseGames.Count, defaultCompletionStatus = defaultStatus },
                 export = new ExportSummaryDto
                 {
                     totalGames = games.Count,
@@ -388,9 +389,33 @@ namespace PlayniteLibraryExporter
             return new UploadPayload
             {
                 Json = Serialization.ToJson(envelope, false),
-                Hash = Sha256(Serialization.ToJson(games, false)),
+                // The default status counts: changing it alone changes which games the site treats as played
+                Hash = Sha256(Serialization.ToJson(new { games, defaultCompletionStatus = defaultStatus }, false)),
                 GameCount = games.Count
             };
+        }
+
+        /// <summary>
+        /// The name of the completion status Playnite gives new games (its settings), which the site treats as "not played"
+        /// whatever it's called. Null when the setting is empty, names a status that no longer exists, or can't be read.
+        /// </summary>
+        private string DefaultCompletionStatusName()
+        {
+            try
+            {
+                var id = api.ApplicationSettings.CompletionStatus.DefaultStatus;
+                if (id == Guid.Empty)
+                {
+                    return null;
+                }
+
+                return GameExportMapper.NullIfWhiteSpace(api.Database.CompletionStatuses.Get(id)?.Name)?.Trim();
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Could not read the default completion status.");
+                return null;
+            }
         }
 
         private static string Sha256(string text)
